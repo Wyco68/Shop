@@ -1,8 +1,5 @@
-# Render Blueprint — portfolio demo (single web service, SQLite)
-# Docs: docs/HOSTING-RENDER.md
-#
-# Deploy: Dashboard → New → Blueprint → connect repo
-# Or set APP_KEY in dashboard before first deploy succeeds.
+# Render Blueprint — SQLite demo + Upstash Redis + Pusher
+# Docs: docs/UPSTASH-PUSHER.md
 
 services:
   - type: web
@@ -14,7 +11,6 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     autoDeploy: true
-    # Free tier: no preDeployCommand — migrate/seed run in docker/render/start.sh
     envVars:
       - key: APP_NAME
         value: CarPart
@@ -24,11 +20,8 @@ services:
         value: "false"
       - key: APP_DEMO_MODE
         value: "true"
-      # Use: php artisan key:generate --show  (must start with base64:)
       - key: APP_KEY
         sync: false
-      # Optional if RENDER_EXTERNAL_URL is set at runtime (start.sh); prefer setting explicitly:
-      # APP_URL=https://carpart-xxxx.onrender.com
       - key: APP_URL
         sync: false
       - key: LOG_CHANNEL
@@ -39,18 +32,40 @@ services:
         value: sqlite
       - key: DB_DATABASE
         value: /var/www/html/database/database.sqlite
+      - key: REDIS_CLIENT
+        value: predis
+      - key: REDIS_URL
+        sync: false
       - key: SESSION_DRIVER
-        value: cookie
+        value: redis
+      - key: CACHE_STORE
+        value: redis
       - key: SESSION_SECURE_COOKIE
         value: "false"
       - key: RENDER
         value: "true"
-      - key: CACHE_STORE
-        value: file
       - key: QUEUE_CONNECTION
         value: sync
       - key: BROADCAST_CONNECTION
-        value: log
+        value: pusher
+      - key: PUSHER_APP_ID
+        sync: false
+      - key: PUSHER_APP_KEY
+        sync: false
+      - key: PUSHER_APP_SECRET
+        sync: false
+      - key: PUSHER_APP_CLUSTER
+        sync: false
+      - key: PUSHER_SCHEME
+        value: https
+      - key: PUSHER_PORT
+        value: "443"
+      - key: VITE_PUSHER_APP_KEY
+        sync: false
+      - key: VITE_PUSHER_APP_CLUSTER
+        sync: false
+      - key: VITE_PUSHER_SCHEME
+        value: https
       - key: FILESYSTEM_DISK
         value: local
       - key: MAIL_MAILER

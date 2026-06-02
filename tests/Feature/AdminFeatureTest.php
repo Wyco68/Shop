@@ -137,7 +137,7 @@ class AdminFeatureTest extends TestCase
             'status' => 'pending'
         ]);
 
-        $this->actingAs($admin)->post(route('admin.orders.markPaid', $order))
+        $this->actingAs($admin)->post(route('admin.orders.processPayment', $order))
             ->assertRedirect();
 
         $data['inventory']->refresh();

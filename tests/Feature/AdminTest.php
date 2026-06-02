@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -97,16 +98,7 @@ class AdminTest extends TestCase
         $this->assertEquals('processing', $order->fresh()->status);
     }
 
-    public function test_admin_can_view_inventory(): void
-    {
-        $admin = User::factory()->admin()->create();
-
-        $response = $this->actingAs($admin)->get('/admin/inventory');
-
-        $response->assertStatus(200);
-    }
-
-    public function test_admin_can_adjust_inventory(): void
+    public function test_admin_can_view_products_with_inventory(): void
     {
         $admin = User::factory()->admin()->create();
         $category = Category::factory()->create();
@@ -114,12 +106,21 @@ class AdminTest extends TestCase
         $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
         Inventory::factory()->create(['variant_id' => $variant->id, 'stock_quantity' => 50]);
 
-        $response = $this->actingAs($admin)->post('/admin/inventory/' . $variant->id . '/adjust', [
-            'quantity' => 20,
-            'note' => 'Restock',
-        ]);
+        $response = $this->actingAs($admin)->get(route('admin.products.index'));
 
-        $response->assertRedirect();
+        $response->assertOk();
+        $response->assertSee($product->name);
+    }
+
+    public function test_admin_can_adjust_inventory(): void
+    {
+        $category = Category::factory()->create();
+        $product = Product::factory()->create(['category_id' => $category->id]);
+        $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
+        Inventory::factory()->create(['variant_id' => $variant->id, 'stock_quantity' => 50]);
+
+        app(InventoryService::class)->adjustStock($variant->id, 20, 'Restock');
+
         $this->assertEquals(70, Inventory::where('variant_id', $variant->id)->first()->stock_quantity);
     }
 

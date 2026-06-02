@@ -181,10 +181,8 @@ document.addEventListener('alpine:init', () => {
             if (userIdMeta && window.Echo) {
                 store._isListening = true;
                 const userId = userIdMeta.content;
-                const channelName = `private-user.${userId}`;
-
                 try {
-                    const channel = window.Echo.private(channelName);
+                    const channel = window.Echo.private(`user.${userId}`);
 
                     channel.listen('.NotificationCreated', (e) => {
                         Alpine.store('notifications').addNotification(e);

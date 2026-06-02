@@ -53,9 +53,7 @@ class NotificationTest extends TestCase
 
         $order = $this->createOrderForUser($user);
 
-        // Trigger the listener directly (sync, no queue in tests)
-        $listener = new NotifyAdminOrderPlaced();
-        $listener->handle(new OrderPlaced($order));
+        app(NotifyAdminOrderPlaced::class)->handle(new OrderPlaced($order));
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $admin->id,
@@ -68,8 +66,9 @@ class NotificationTest extends TestCase
         $user  = User::factory()->create(['role' => 'user']);
         $order = $this->createOrderForUser($user);
 
-        $listener = new NotifyUserOrderStatusUpdated();
-        $listener->handle(new OrderStatusUpdated($order, Order::STATUS_PENDING_PAYMENT, Order::STATUS_PAID));
+        app(NotifyUserOrderStatusUpdated::class)->handle(
+            new OrderStatusUpdated($order, Order::STATUS_PENDING_PAYMENT, Order::STATUS_PAID)
+        );
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
@@ -90,8 +89,7 @@ class NotificationTest extends TestCase
             'status'   => RefundRequest::STATUS_PENDING,
         ]);
 
-        $listener = new NotifyAdminRefundRequested();
-        $listener->handle(new RefundRequested($refund));
+        app(NotifyAdminRefundRequested::class)->handle(new RefundRequested($refund));
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $admin->id,
@@ -111,8 +109,7 @@ class NotificationTest extends TestCase
             'status'   => RefundRequest::STATUS_APPROVED,
         ]);
 
-        $listener = new NotifyUserRefundApproved();
-        $listener->handle(new RefundApproved($refund));
+        app(NotifyUserRefundApproved::class)->handle(new RefundApproved($refund));
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
@@ -133,8 +130,7 @@ class NotificationTest extends TestCase
             'admin_note' => 'Policy does not allow change of mind refunds.',
         ]);
 
-        $listener = new NotifyUserRefundRejected();
-        $listener->handle(new RefundRejected($refund));
+        app(NotifyUserRefundRejected::class)->handle(new RefundRejected($refund));
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,

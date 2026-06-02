@@ -8,13 +8,13 @@ A production-ready monolithic e-commerce platform built with Laravel 11, featuri
 - Pay-by-transfer checkout with SHA-256 duplicate proof upload detection.
 - ACID-compliant inventory management using pessimistic locking to prevent overselling.
 - Admin dashboard for manual payment verification, order management, and refund processing.
-- Real-time notifications using Laravel Reverb and Alpine.js.
+- Real-time notifications using Pusher Channels and Alpine.js.
 
 ## Tech Stack
 - **Backend:** Laravel 11, PHP 8.4
 - **Database:** MySQL 8, Redis (Caching, Sessions, Queues)
 - **Frontend:** Blade, TailwindCSS v4, Alpine.js
-- **Realtime:** Laravel Reverb, Echo, Pusher-js
+- **Realtime:** Pusher Channels, Laravel Echo
 - **Infrastructure:** Docker (Laravel Sail)
 
 ## Setup Instructions
@@ -39,7 +39,8 @@ The project uses Docker via Laravel Sail. Run all commands from WSL.
 - `APP_URL`: Application URL.
 - `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: MySQL connection settings.
 - `REDIS_HOST`, `REDIS_PORT`: Redis connection for queues and caching.
-- `BROADCAST_CONNECTION=reverb`: Set to Reverb for WebSocket events.
+- `BROADCAST_CONNECTION=pusher`: Pusher Channels for live notifications (see [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)).
+- `REDIS_URL`: Upstash (Render) or Sail Redis (local) for sessions/cache.
 - `FILESYSTEM_DISK=local`: Storage disk for payment proofs.
 
 ## Development Commands
@@ -53,6 +54,10 @@ The project uses Docker via Laravel Sail. Run all commands from WSL.
 - **Authorization:** `is_admin` middleware for admin routes, Eloquent Policies for resource access.
 - **Race Conditions:** `lockForUpdate()` is used on inventory rows to prevent overselling.
 - **File Uploads:** Payment proofs are validated and hashed (SHA-256) to block duplicates.
+
+## Upstash Redis + Pusher (Render realtime)
+
+For **Upstash** sessions/cache and **Pusher** live notifications with the app on Render: [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)
 
 ## Deploy on Render (portfolio demo)
 

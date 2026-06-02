@@ -1,7 +1,7 @@
 # Deploy CarPart on Render
 
-> **Portfolio-ready** — one free Web Service, SQLite demo data, no Redis/Reverb required.  
-> Full local dev still uses [Laravel Sail](../README.md).
+> **Portfolio-ready** — one free Web Service, SQLite demo data, **Upstash Redis** + **Pusher** for sessions and live notifications.  
+> Setup: [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md). Local dev: [Laravel Sail](../README.md).
 
 ---
 
@@ -12,7 +12,8 @@
 | **Platform** | [Render](https://render.com) Web Service (Docker) |
 | **Cost** | Free tier (sleeps after ~15 min idle; first load ~30–60s) |
 | **Database** | SQLite (file in container; re-seeded on deploy) |
-| **Realtime** | Off (`BROADCAST_CONNECTION=log`) — notifications load from DB |
+| **Realtime** | Pusher Channels (`BROADCAST_CONNECTION=pusher`) |
+| **Redis** | Upstash (`REDIS_URL`, sessions + cache) |
 | **Demo logins** | See [Demo accounts](#demo-accounts) |
 
 ```mermaid
@@ -126,12 +127,21 @@ LOG_LEVEL=info
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
 
-SESSION_DRIVER=cookie
+REDIS_CLIENT=predis
+REDIS_URL=rediss://default:...@....upstash.io:6379
+SESSION_DRIVER=redis
+CACHE_STORE=redis
 SESSION_SECURE_COOKIE=false
 RENDER=true
-CACHE_STORE=file
 QUEUE_CONNECTION=sync
-BROADCAST_CONNECTION=log
+BROADCAST_CONNECTION=pusher
+PUSHER_APP_ID=...
+PUSHER_APP_KEY=...
+PUSHER_APP_SECRET=...
+PUSHER_APP_CLUSTER=mt1
+VITE_PUSHER_APP_KEY=...        # same as PUSHER_APP_KEY — rebuild after change
+VITE_PUSHER_APP_CLUSTER=mt1
+VITE_PUSHER_SCHEME=https
 FILESYSTEM_DISK=local
 MAIL_MAILER=log
 ```
@@ -166,21 +176,24 @@ Seeded by [`RenderDemoSeeder`](../database/seeders/RenderDemoSeeder.php) on each
 | Variable | Value | Why |
 |----------|--------|-----|
 | `DB_CONNECTION` | `sqlite` | No external MySQL cost |
-| `SESSION_DRIVER` | `cookie` | Session stored in encrypted cookie (reliable on Render) |
+| `REDIS_URL` | Upstash `rediss://…` | Sessions + cache (see [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md)) |
+| `REDIS_CLIENT` | `predis` | TLS Redis without `phpredis` in Docker |
+| `SESSION_DRIVER` | `redis` | Shared session store |
 | `SESSION_SECURE_COOKIE` | `false` | TLS ends at Render edge; `true` often blocks cookies → 419 |
 | `RENDER` | `true` | Enables production session tweaks (set in `render.yaml`) |
-| `QUEUE_CONNECTION` | `sync` | No background worker |
-| `BROADCAST_CONNECTION` | `log` | No Reverb service |
+| `QUEUE_CONNECTION` | `sync` | No background worker on free tier |
+| `BROADCAST_CONNECTION` | `pusher` | Live notifications via Pusher Channels |
+| `VITE_PUSHER_*` | Same as Pusher app | Baked into JS at Docker build |
 | `APP_DEMO_MODE` | `true` | Runs lightweight `RenderDemoSeeder` on container start |
+
+**Setup:** [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md) — create Upstash + Pusher apps, paste secrets in Render, redeploy.
 
 ### Upgrade path (production-like)
 
 | Add | Render resource |
 |-----|-----------------|
 | MySQL | External DB (Railway, Aiven, DO) — set `DB_*` |
-| Redis | Render Redis — set `REDIS_URL`, `SESSION_DRIVER=redis` |
 | Queues | Background Worker — `php artisan queue:work redis` |
-| Reverb | Second Web Service — `php artisan reverb:start` + `VITE_REVERB_*` at build |
 | Uploads | S3/R2 — configure `FILESYSTEM_DISK=s3` + disk config |
 
 ---
@@ -228,7 +241,9 @@ sequenceDiagram
 | **502 / deploy failed** | Check **Logs** → often missing `APP_KEY` or build error |
 | **500 on every page** | Set `APP_KEY` (`base64:…` from `php artisan key:generate --show`); set `APP_URL` to exact Render HTTPS URL; redeploy |
 | **500 after env change** | Redeploy (startup runs `optimize:clear` — avoid manual config cache on free tier) |
-| **419 on POST /login** | In Render env: `APP_URL=https://…onrender.com`, `APP_KEY=base64:…`, `SESSION_DRIVER=cookie`, `SESSION_SECURE_COOKIE=false` (not true). Redeploy latest code. Clear cookies or use incognito. |
+| **419 on POST /login** | `APP_URL=https://…onrender.com`, `APP_KEY=base64:…` (no quotes), `SESSION_SECURE_COOKIE=false`, valid `REDIS_URL`. Redeploy; clear cookies. |
+| **No live notifications** | Set `BROADCAST_CONNECTION=pusher`, all `PUSHER_*` + `VITE_PUSHER_*`, then **redeploy** (Vite bakes keys at build). Check Pusher Debug Console. |
+| **Redis connection error** | `REDIS_CLIENT=predis`, Upstash URL uses `rediss://`, region reachable from Render |
 | **No CSS / unstyled page** | Redeploy latest `start.sh` (must use `public/server.php` so `/build/assets/*` are served). Hard-refresh (Ctrl+Shift+R). |
 | **Admin stats pale / no labels** | Redeploy after Tailwind safelist fix; rebuild Docker image so `npm run build` runs again. |
 | **CSS/JS broken** | Build failed — search logs for `npm run build` errors |
@@ -261,10 +276,14 @@ docker run --rm -p 10000:10000 \
   -e APP_URL=http://localhost:10000 \
   -e DB_CONNECTION=sqlite \
   -e DB_DATABASE=/var/www/html/database/database.sqlite \
-  -e SESSION_DRIVER=file \
-  -e CACHE_STORE=file \
+  -e REDIS_CLIENT=predis \
+  -e REDIS_URL=rediss://... \
+  -e SESSION_DRIVER=redis \
+  -e CACHE_STORE=redis \
   -e QUEUE_CONNECTION=sync \
-  -e BROADCAST_CONNECTION=log \
+  -e BROADCAST_CONNECTION=pusher \
+  -e PUSHER_APP_KEY=... \
+  -e VITE_PUSHER_APP_KEY=... \
   -e APP_DEMO_MODE=true \
   carpart-render
 ```
