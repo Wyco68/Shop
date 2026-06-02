@@ -20,8 +20,6 @@
 </head>
 <body class="antialiased bg-[#fbfbfd] text-[#1d1d1f] overflow-x-hidden flex flex-col min-h-screen">
 
-    <x-demo-banner />
-
     @include('layouts.navigation')
 
     {{-- Flash Messages --}}
@@ -51,7 +49,6 @@
         </div>
     </footer>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @stack('scripts')
 </body>
 </html>

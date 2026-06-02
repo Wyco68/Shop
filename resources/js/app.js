@@ -1,4 +1,5 @@
 import './bootstrap';
+import Alpine from 'alpinejs';
 
 document.addEventListener('alpine:init', () => {
     Alpine.store('notifications', {
@@ -185,7 +186,6 @@ document.addEventListener('alpine:init', () => {
                 try {
                     const channel = window.Echo.private(channelName);
 
-                    // Dot prefix required when backend event uses broadcastAs() with a custom name
                     channel.listen('.NotificationCreated', (e) => {
                         Alpine.store('notifications').addNotification(e);
                     });
@@ -196,3 +196,6 @@ document.addEventListener('alpine:init', () => {
         }
     });
 });
+
+window.Alpine = Alpine;
+Alpine.start();

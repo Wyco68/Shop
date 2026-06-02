@@ -83,7 +83,7 @@ If your key is raw base64 only (no `base64:` prefix), either add the prefix or r
 
 ### 5. Open the site
 
-Visit your Render URL. A **yellow demo banner** shows login hints when `APP_DEMO_MODE=true`.
+Visit your Render URL. Demo logins are in [Demo accounts](#demo-accounts) below.
 
 ---
 
@@ -171,7 +171,7 @@ Seeded by [`RenderDemoSeeder`](../database/seeders/RenderDemoSeeder.php) on each
 | `RENDER` | `true` | Enables production session tweaks (set in `render.yaml`) |
 | `QUEUE_CONNECTION` | `sync` | No background worker |
 | `BROADCAST_CONNECTION` | `log` | No Reverb service |
-| `APP_DEMO_MODE` | `true` | Shows portfolio banner |
+| `APP_DEMO_MODE` | `true` | Runs lightweight `RenderDemoSeeder` on container start |
 
 ### Upgrade path (production-like)
 
@@ -288,7 +288,7 @@ Open: http://localhost:10000 (first boot may take ~30s while the DB seeds)
 
 - [ ] Live URL works (`/up` returns 200)
 - [ ] `APP_URL` matches public HTTPS URL
-- [ ] Demo banner visible; tested admin + customer login
+- [ ] Tested admin + customer login
 - [ ] README links to this doc and your live URL
 - [ ] Noted cold-start on free tier (one line)
 - [ ] Optional: GIF/screenshots in README

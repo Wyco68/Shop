@@ -20,8 +20,6 @@
 </head>
 <body class="antialiased bg-slate-50 text-slate-800 overflow-x-hidden flex min-h-screen" x-data="{ sidebarOpen: false }">
 
-    <x-demo-banner />
-
     <!-- Mobile Sidebar Backdrop -->
     <div x-show="sidebarOpen" 
          x-transition:enter="transition-opacity ease-linear duration-300"
@@ -69,7 +67,7 @@
                             </svg>
                             Notifications
                         </div>
-                        <template x-if="$store.notifications.unreadCount > 0">
+                        <template x-if="$store.notifications && $store.notifications.unreadCount > 0">
                             <span x-text="$store.notifications.unreadCount" class="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full"></span>
                         </template>
                     </a>
@@ -245,8 +243,6 @@
         </footer>
     </div>
 
-    <!-- AlpineJS for interactive elements -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @stack('scripts')
 </body>
 </html>
