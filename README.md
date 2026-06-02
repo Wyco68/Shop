@@ -59,6 +59,10 @@ The project uses Docker via Laravel Sail. Run all commands from WSL.
 
 For **Upstash** sessions/cache and **Pusher** live notifications with the app on Render: [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)
 
+## Deploy to Production
+
+For a production-grade setup (managed MySQL, Redis queues, worker service, persistent uploads, and hardening checklist): [docs/HOSTING-PRODUCTION.md](docs/HOSTING-PRODUCTION.md)
+
 ## Deploy on Render (portfolio demo)
 
 Host a **free portfolio demo** on Render (Docker, SQLite, lightweight seed):
