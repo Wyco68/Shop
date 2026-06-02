@@ -62,5 +62,12 @@ if [ -z "${APP_URL:-}" ]; then
     echo "[start] WARNING: APP_URL is not set — set https://your-app.onrender.com in Render Environment."
 fi
 
-# Serve via public/index.php router (works correctly with X-Forwarded-Proto on Render)
-exec php -S "0.0.0.0:${PORT:-10000}" -t public public/index.php
+if [ ! -f public/build/manifest.json ]; then
+    echo "[start] ERROR: public/build/manifest.json missing — Vite assets were not built into the Docker image."
+    exit 1
+fi
+
+# Laravel server.php serves /build/assets/* as static files; routing only through index.php breaks @vite CSS/JS
+cd public
+exec php -S "0.0.0.0:${PORT:-10000}" \
+    ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php

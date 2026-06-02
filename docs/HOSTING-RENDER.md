@@ -227,6 +227,7 @@ sequenceDiagram
 | **500 on every page** | Set `APP_KEY` (`base64:…` from `php artisan key:generate --show`); set `APP_URL` to exact Render HTTPS URL; redeploy |
 | **500 after env change** | Redeploy (startup runs `optimize:clear` — avoid manual config cache on free tier) |
 | **419 on POST /login** | Set `APP_URL=https://…onrender.com`; `APP_KEY=base64:…`; `SESSION_SECURE_COOKIE=true`; `SESSION_DRIVER=database`; redeploy latest code (fixes HTTPS proxy for cookies). Clear site cookies or use incognito. |
+| **No CSS / unstyled page** | Redeploy latest `start.sh` (must use Laravel `server.php` so `/build/assets/*` are served as static files). Hard-refresh (Ctrl+Shift+R). |
 | **CSS/JS broken** | Build failed — search logs for `npm run build` errors |
 | **`/up` unhealthy** | App not listening on `$PORT`; verify Docker deploy succeeded |
 | **No products** | Redeploy or restart service (startup runs seeder); or Render Shell: `php artisan db:seed --class=RenderDemoSeeder --force` |
