@@ -6,7 +6,7 @@
 # 2. Architecture
 - **Frontend structure:** Server-Side Rendered (SSR) Blade templates integrated with TailwindCSS v4 and Alpine.js for interactivity.
 - **Backend:** Laravel 11 monolith handling routing, business logic (Services), and database interaction. No Supabase is used; native MySQL with Eloquent ORM is implemented.
-- **Data flow:** Request → Middleware (Auth/Admin) → Controller → Service Layer (ACID Transactions) → MySQL. Realtime events flow from Backend → Reverb → Echo/Alpine.js.
+- **Data flow:** Request → Middleware (Auth/Admin) → Controller → Service Layer (ACID Transactions) → MySQL. Realtime events flow from Backend → Pusher Channels → Echo/Alpine.js.
 
 # 3. Features (DETAILED)
 - **Product & Inventory Management:** 
@@ -26,7 +26,7 @@
 
 # 4. Authentication & Authorization
 - **Auth methods:** Laravel session-based authentication (Breeze-like).
-- **Session handling:** Redis-backed sessions (`SESSION_DRIVER=redis`).
+- **Session handling:** Laravel session auth. Deployment profile can use cookie sessions (`SESSION_DRIVER=cookie`) for simplicity on single-instance demos, or Redis sessions in production.
 - **RLS explanation:** Not using Postgres/Supabase RLS. Security is implemented at the application level via Laravel Policies (`$this->authorize('view', $order)`) and Middleware (`is_admin`, `auth`).
 
 # 5. Database Design
@@ -38,7 +38,7 @@
 
 # 6. Realtime System
 - **What updates in realtime:** User notifications (e.g., order status updates).
-- **How it's implemented:** Laravel Events broadcast over Reverb (`private-user.{id}` channels), listened to by Pusher-js/Laravel Echo, and state-managed by Alpine.js.
+- **How it's implemented:** Laravel Events broadcast over Pusher (`user.{id}` private channels), listened to by Pusher-js/Laravel Echo, and state-managed by Alpine.js.
 
 # 7. Security Model
 - **RLS policies:** N/A (App-level authorization).

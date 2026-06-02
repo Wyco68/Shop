@@ -37,9 +37,9 @@ services:
       - key: REDIS_URL
         sync: false
       - key: SESSION_DRIVER
-        value: redis
+        value: cookie
       - key: CACHE_STORE
-        value: redis
+        value: file
       - key: SESSION_SECURE_COOKIE
         value: "false"
       - key: RENDER

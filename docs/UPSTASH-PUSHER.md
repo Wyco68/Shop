@@ -1,6 +1,6 @@
 # Upstash Redis + Pusher (Render)
 
-Use **Upstash** for sessions/cache and **Pusher Channels** for realtime notifications while the Laravel app stays on **Render**.
+Use **Pusher Channels** for realtime notifications, and optionally add **Upstash** for cache/sessions while the Laravel app stays on **Render**.
 
 ```mermaid
 flowchart LR
@@ -28,8 +28,11 @@ In Render **Environment**:
 ```env
 REDIS_CLIENT=predis
 REDIS_URL=rediss://default:xxxx@xxxx.upstash.io:6379
-SESSION_DRIVER=redis
+# Safer rollout:
+# 1) CACHE_STORE=redis + SESSION_DRIVER=cookie
+# 2) If stable, switch SESSION_DRIVER=redis
 CACHE_STORE=redis
+SESSION_DRIVER=cookie
 ```
 
 Free tier: ~256 MB, ~500K commands/month. Idle DB may archive after ~14 days.
@@ -116,7 +119,7 @@ If not working:
 
 ## 5. Render checklist
 
-- [ ] `REDIS_URL` from Upstash (with `rediss://`)
+- [ ] `REDIS_URL` from Upstash (with `rediss://`) if enabling Redis
 - [ ] `REDIS_CLIENT=predis`
 - [ ] All `PUSHER_*` and `VITE_PUSHER_*` set
 - [ ] `APP_URL` = your `https://….onrender.com`

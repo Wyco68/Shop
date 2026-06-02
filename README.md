@@ -12,7 +12,7 @@ A production-ready monolithic e-commerce platform built with Laravel 11, featuri
 
 ## Tech Stack
 - **Backend:** Laravel 11, PHP 8.4
-- **Database:** MySQL 8, Redis (Caching, Sessions, Queues)
+- **Database:** MySQL 8 (Redis optional for cache/sessions/queues)
 - **Frontend:** Blade, TailwindCSS v4, Alpine.js
 - **Realtime:** Pusher Channels, Laravel Echo
 - **Infrastructure:** Docker (Laravel Sail)
@@ -38,9 +38,9 @@ The project uses Docker via Laravel Sail. Run all commands from WSL.
 ## Environment Variables
 - `APP_URL`: Application URL.
 - `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: MySQL connection settings.
-- `REDIS_HOST`, `REDIS_PORT`: Redis connection for queues and caching.
+- `REDIS_HOST`, `REDIS_PORT` or `REDIS_URL`: optional Redis connection for cache/sessions/queues.
 - `BROADCAST_CONNECTION=pusher`: Pusher Channels for live notifications (see [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)).
-- `REDIS_URL`: Upstash (Render) or Sail Redis (local) for sessions/cache.
+- `REDIS_URL`: Upstash (Render) or Sail Redis (local) when enabling Redis-backed cache/sessions.
 - `FILESYSTEM_DISK=local`: Storage disk for payment proofs.
 
 ## Development Commands
@@ -55,9 +55,9 @@ The project uses Docker via Laravel Sail. Run all commands from WSL.
 - **Race Conditions:** `lockForUpdate()` is used on inventory rows to prevent overselling.
 - **File Uploads:** Payment proofs are validated and hashed (SHA-256) to block duplicates.
 
-## Upstash Redis + Pusher (Render realtime)
+## Upstash Redis + Pusher (optional on Render)
 
-For **Upstash** sessions/cache and **Pusher** live notifications with the app on Render: [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)
+Use **Pusher** for live notifications, and optionally add **Upstash Redis** for cache/sessions: [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)
 
 ## Deploy to Production
 

@@ -1,7 +1,7 @@
 # Deploy CarPart on Render
 
-> **Portfolio-ready** — one free Web Service, SQLite demo data, **Upstash Redis** + **Pusher** for sessions and live notifications.  
-> Setup: [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md). Local dev: [Laravel Sail](../README.md).
+> **Portfolio-ready** — one free Web Service, SQLite demo data, **Pusher** realtime, and stable default session/cache without Redis.  
+> Optional Redis rollout: [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md). Local dev: [Laravel Sail](../README.md).
 
 ---
 
@@ -13,7 +13,7 @@
 | **Cost** | Free tier (sleeps after ~15 min idle; first load ~30–60s) |
 | **Database** | SQLite (file in container; re-seeded on deploy) |
 | **Realtime** | Pusher Channels (`BROADCAST_CONNECTION=pusher`) |
-| **Redis** | Upstash (`REDIS_URL`, sessions + cache) |
+| **Redis** | Optional Upstash (`REDIS_URL`) for cache/sessions |
 | **Demo logins** | See [Demo accounts](#demo-accounts) |
 
 ```mermaid
@@ -128,9 +128,9 @@ DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
 
 REDIS_CLIENT=predis
-REDIS_URL=rediss://default:...@....upstash.io:6379
-SESSION_DRIVER=redis
-CACHE_STORE=redis
+# REDIS_URL=rediss://default:...@....upstash.io:6379   # optional
+SESSION_DRIVER=cookie
+CACHE_STORE=file
 SESSION_SECURE_COOKIE=false
 RENDER=true
 QUEUE_CONNECTION=sync
@@ -176,9 +176,9 @@ Seeded by [`RenderDemoSeeder`](../database/seeders/RenderDemoSeeder.php) on each
 | Variable | Value | Why |
 |----------|--------|-----|
 | `DB_CONNECTION` | `sqlite` | No external MySQL cost |
-| `REDIS_URL` | Upstash `rediss://…` | Sessions + cache (see [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md)) |
-| `REDIS_CLIENT` | `predis` | TLS Redis without `phpredis` in Docker |
-| `SESSION_DRIVER` | `redis` | Shared session store |
+| `REDIS_URL` | Upstash `rediss://…` (optional) | Enable only after validating connectivity |
+| `REDIS_CLIENT` | `predis` | TLS Redis client when Redis is enabled |
+| `SESSION_DRIVER` | `cookie` | Stable default on free single-instance deployments |
 | `SESSION_SECURE_COOKIE` | `false` | TLS ends at Render edge; `true` often blocks cookies → 419 |
 | `RENDER` | `true` | Enables production session tweaks (set in `render.yaml`) |
 | `QUEUE_CONNECTION` | `sync` | No background worker on free tier |
@@ -241,9 +241,9 @@ sequenceDiagram
 | **502 / deploy failed** | Check **Logs** → often missing `APP_KEY` or build error |
 | **500 on every page** | Set `APP_KEY` (`base64:…` from `php artisan key:generate --show`); set `APP_URL` to exact Render HTTPS URL; redeploy |
 | **500 after env change** | Redeploy (startup runs `optimize:clear` — avoid manual config cache on free tier) |
-| **419 on POST /login** | `APP_URL=https://…onrender.com`, `APP_KEY=base64:…` (no quotes), `SESSION_SECURE_COOKIE=false`, valid `REDIS_URL`. Redeploy; clear cookies. |
+| **419 on POST /login** | `APP_URL=https://…onrender.com`, `APP_KEY=base64:…` (no quotes), `SESSION_SECURE_COOKIE=false`; start with `SESSION_DRIVER=cookie`. Redeploy; clear cookies. |
 | **No live notifications** | Set `BROADCAST_CONNECTION=pusher`, all `PUSHER_*` + `VITE_PUSHER_*`, then **redeploy** (Vite bakes keys at build). Check Pusher Debug Console. |
-| **Redis connection error** | `REDIS_CLIENT=predis`, Upstash URL uses `rediss://`, region reachable from Render |
+| **Redis connection error** | Keep `SESSION_DRIVER=cookie` + `CACHE_STORE=file`, verify Upstash URL, then enable Redis gradually |
 | **No CSS / unstyled page** | Redeploy latest `start.sh` (must use `public/server.php` so `/build/assets/*` are served). Hard-refresh (Ctrl+Shift+R). |
 | **Admin stats pale / no labels** | Redeploy after Tailwind safelist fix; rebuild Docker image so `npm run build` runs again. |
 | **CSS/JS broken** | Build failed — search logs for `npm run build` errors |
@@ -277,9 +277,8 @@ docker run --rm -p 10000:10000 \
   -e DB_CONNECTION=sqlite \
   -e DB_DATABASE=/var/www/html/database/database.sqlite \
   -e REDIS_CLIENT=predis \
-  -e REDIS_URL=rediss://... \
-  -e SESSION_DRIVER=redis \
-  -e CACHE_STORE=redis \
+  -e SESSION_DRIVER=cookie \
+  -e CACHE_STORE=file \
   -e QUEUE_CONNECTION=sync \
   -e BROADCAST_CONNECTION=pusher \
   -e PUSHER_APP_KEY=... \
