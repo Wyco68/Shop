@@ -50,7 +50,7 @@
         <nav class="flex-1 py-6 px-4 space-y-7 overflow-y-auto">
             <!-- Main Group -->
             <div>
-                <span class="px-3 text-xxs font-bold text-slate-500 uppercase tracking-widest block mb-3">Core</span>
+                <span class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Core</span>
                 <div class="space-y-1">
                     <a href="{{ route('admin.dashboard') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.dashboard') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
@@ -78,7 +78,7 @@
 
             <!-- Management Group -->
             <div>
-                <span class="px-3 text-xxs font-bold text-slate-500 uppercase tracking-widest block mb-3">Management</span>
+                <span class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Management</span>
                 <div class="space-y-1">
                     <a href="{{ route('admin.products.index') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.products.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">

@@ -37,11 +37,14 @@ class AppServiceProvider extends ServiceProvider
             if ($appUrl = config('app.url')) {
                 URL::forceRootUrl($appUrl);
             }
+        }
 
-            // Render terminates TLS at the edge; without this, session cookies may not persist (419 CSRF)
-            if (config('session.secure') === null) {
-                config(['session.secure' => true]);
-            }
+        // Render TLS is terminated at the edge; Secure cookies + undetected HTTPS = no Set-Cookie → 419
+        if (config('app.demo_mode') || env('RENDER')) {
+            config([
+                'session.secure' => false,
+                'session.same_site' => 'lax',
+            ]);
         }
     }
 }

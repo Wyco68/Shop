@@ -126,8 +126,9 @@ LOG_LEVEL=info
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
 
-SESSION_DRIVER=database
-SESSION_SECURE_COOKIE=true
+SESSION_DRIVER=cookie
+SESSION_SECURE_COOKIE=false
+RENDER=true
 CACHE_STORE=file
 QUEUE_CONNECTION=sync
 BROADCAST_CONNECTION=log
@@ -165,8 +166,9 @@ Seeded by [`RenderDemoSeeder`](../database/seeders/RenderDemoSeeder.php) on each
 | Variable | Value | Why |
 |----------|--------|-----|
 | `DB_CONNECTION` | `sqlite` | No external MySQL cost |
-| `SESSION_DRIVER` | `database` | Sessions in SQLite (avoids file cookie issues on Render) |
-| `SESSION_SECURE_COOKIE` | `true` | Required for HTTPS behind Render proxy |
+| `SESSION_DRIVER` | `cookie` | Session stored in encrypted cookie (reliable on Render) |
+| `SESSION_SECURE_COOKIE` | `false` | TLS ends at Render edge; `true` often blocks cookies → 419 |
+| `RENDER` | `true` | Enables production session tweaks (set in `render.yaml`) |
 | `QUEUE_CONNECTION` | `sync` | No background worker |
 | `BROADCAST_CONNECTION` | `log` | No Reverb service |
 | `APP_DEMO_MODE` | `true` | Shows portfolio banner |
@@ -226,8 +228,9 @@ sequenceDiagram
 | **502 / deploy failed** | Check **Logs** → often missing `APP_KEY` or build error |
 | **500 on every page** | Set `APP_KEY` (`base64:…` from `php artisan key:generate --show`); set `APP_URL` to exact Render HTTPS URL; redeploy |
 | **500 after env change** | Redeploy (startup runs `optimize:clear` — avoid manual config cache on free tier) |
-| **419 on POST /login** | Set `APP_URL=https://…onrender.com`; `APP_KEY=base64:…`; `SESSION_SECURE_COOKIE=true`; `SESSION_DRIVER=database`; redeploy latest code (fixes HTTPS proxy for cookies). Clear site cookies or use incognito. |
-| **No CSS / unstyled page** | Redeploy latest `start.sh` (must use Laravel `server.php` so `/build/assets/*` are served as static files). Hard-refresh (Ctrl+Shift+R). |
+| **419 on POST /login** | In Render env: `APP_URL=https://…onrender.com`, `APP_KEY=base64:…`, `SESSION_DRIVER=cookie`, `SESSION_SECURE_COOKIE=false` (not true). Redeploy latest code. Clear cookies or use incognito. |
+| **No CSS / unstyled page** | Redeploy latest `start.sh` (must use `public/server.php` so `/build/assets/*` are served). Hard-refresh (Ctrl+Shift+R). |
+| **Admin stats pale / no labels** | Redeploy after Tailwind safelist fix; rebuild Docker image so `npm run build` runs again. |
 | **CSS/JS broken** | Build failed — search logs for `npm run build` errors |
 | **`/up` unhealthy** | App not listening on `$PORT`; verify Docker deploy succeeded |
 | **No products** | Redeploy or restart service (startup runs seeder); or Render Shell: `php artisan db:seed --class=RenderDemoSeeder --force` |

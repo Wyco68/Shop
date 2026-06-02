@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PROTO,
         );
 
+        $middleware->prepend(\App\Http\Middleware\TrustForwardedProto::class);
+
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
             'redirect_admin' => \App\Http\Middleware\RedirectAdmin::class,
