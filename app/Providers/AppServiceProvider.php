@@ -13,6 +13,7 @@ use App\Listeners\NotifyUserOrderStatusUpdated;
 use App\Listeners\NotifyUserRefundApproved;
 use App\Listeners\NotifyUserRefundRejected;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +31,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Relying on Laravel 11 auto-discovery for Event Listeners
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+
+            if ($appUrl = config('app.url')) {
+                URL::forceRootUrl($appUrl);
+            }
+
+            // Render terminates TLS at the edge; without this, session cookies may not persist (419 CSRF)
+            if (config('session.secure') === null) {
+                config(['session.secure' => true]);
+            }
+        }
     }
 }

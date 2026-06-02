@@ -20,6 +20,8 @@
 </head>
 <body class="antialiased bg-[#fbfbfd] text-[#1d1d1f] overflow-x-hidden flex flex-col min-h-screen">
 
+    <x-demo-banner />
+
     @include('layouts.navigation')
 
     {{-- Flash Messages --}}

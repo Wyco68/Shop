@@ -53,3 +53,20 @@ The project uses Docker via Laravel Sail. Run all commands from WSL.
 - **Authorization:** `is_admin` middleware for admin routes, Eloquent Policies for resource access.
 - **Race Conditions:** `lockForUpdate()` is used on inventory rows to prevent overselling.
 - **File Uploads:** Payment proofs are validated and hashed (SHA-256) to block duplicates.
+
+## Deploy on Render (portfolio demo)
+
+Host a **free portfolio demo** on Render (Docker, SQLite, lightweight seed):
+
+1. Push to GitHub → [Render Blueprint](https://dashboard.render.com) → connect repo (`render.yaml`).
+2. Set **`APP_URL`** to your `https://….onrender.com` URL after the first deploy.
+3. Open the site — demo logins appear in the top banner.
+
+**Full guide:** [docs/HOSTING-RENDER.md](docs/HOSTING-RENDER.md)
+
+| Demo login | Email | Password |
+|------------|--------|----------|
+| Admin | `admin@carpart.test` | `password` |
+| Customer | `user@carpart.test` | `password` |
+
+> Free tier sleeps when idle; first visit may take ~30–60s. Local full catalog: `./vendor/bin/sail artisan migrate:fresh --seed`.

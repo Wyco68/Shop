@@ -1,0 +1,55 @@
+# Render Blueprint — portfolio demo (single web service, SQLite)
+# Docs: docs/HOSTING-RENDER.md
+#
+# Deploy: Dashboard → New → Blueprint → connect repo
+# Or set APP_KEY in dashboard before first deploy succeeds.
+
+services:
+  - type: web
+    name: carpart
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /up
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    # Free tier: no preDeployCommand — migrate/seed run in docker/render/start.sh
+    envVars:
+      - key: APP_NAME
+        value: CarPart
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_DEMO_MODE
+        value: "true"
+      # Use: php artisan key:generate --show  (must start with base64:)
+      - key: APP_KEY
+        sync: false
+      # Optional if RENDER_EXTERNAL_URL is set at runtime (start.sh); prefer setting explicitly:
+      # APP_URL=https://carpart-xxxx.onrender.com
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/database.sqlite
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: BROADCAST_CONNECTION
+        value: log
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: MAIL_MAILER
+        value: log

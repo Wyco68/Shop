@@ -20,6 +20,8 @@
 </head>
 <body class="antialiased bg-slate-50 text-slate-800 overflow-x-hidden flex min-h-screen" x-data="{ sidebarOpen: false }">
 
+    <x-demo-banner />
+
     <!-- Mobile Sidebar Backdrop -->
     <div x-show="sidebarOpen" 
          x-transition:enter="transition-opacity ease-linear duration-300"

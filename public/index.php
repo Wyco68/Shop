@@ -5,6 +5,12 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Render (and other TLS terminators) forward HTTPS; PHP's built-in server does not set $_SERVER['HTTPS'] without this.
+if (($forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null) === 'https') {
+    $_SERVER['HTTPS'] = 'on';
+    $_SERVER['SERVER_PORT'] = $_SERVER['SERVER_PORT'] ?? '443';
+}
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;

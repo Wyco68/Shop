@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Portfolio / demo mode
+    |--------------------------------------------------------------------------
+    |
+    | When true, shows a banner with demo login hints (Render portfolio deploys).
+    |
+    */
+
+    'demo_mode' => (bool) env('APP_DEMO_MODE', false),
+
 ];
