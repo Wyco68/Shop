@@ -1,120 +1,83 @@
 # E-Commerce Platform Template
 
-A production-ready, product-agnostic Laravel e-commerce starter: catalog with variants, inventory, cart, pay-by-transfer checkout with proof verification, admin dashboard, and real-time notifications.
+## Overview
 
-## Tech stack
+- Laravel e-commerce starter for any product-based store.
+- Catalog with variants, inventory, cart, and pay-by-transfer checkout with proof verification.
+- Admin dashboard and real-time notifications.
+- Empty database after migrate — configure catalog and payment methods in admin.
 
-- **Backend:** Laravel 11, PHP 8.4
-- **Database:** MySQL 8
-- **Cache / sessions / queues:** Redis
-- **Frontend:** Blade, Tailwind CSS v4, Alpine.js
-- **Realtime:** Pusher Channels, Laravel Echo
-- **Infrastructure:** Docker Compose quickstart + Laravel Sail
+## Tech Stack
 
-## Quick start (Docker Compose)
+- Laravel 11, PHP 8.4, MySQL 8
+- Redis (sessions, cache, queues)
+- Blade, Tailwind CSS v4, Alpine.js
+- Pusher Channels + Laravel Echo
+- Laravel Sail (Docker)
+
+## Quick Start
+
+1. Clone and enter the project:
+
+```bash
+git clone <repo-url> ecommerce && cd ecommerce
+```
+
+2. Copy env and install PHP dependencies:
 
 ```bash
 cp .env.example .env
-docker compose -f docker/docker-compose.yml up --build
+composer install
 ```
 
-Then create the first administrator (one-time):
-
-```bash
-docker compose -f docker/docker-compose.yml exec app php artisan app:init-admin
-```
-
-Or visit `http://localhost:8080/setup` before any admin exists.
-
-Build frontend assets (host or inside container):
-
-```bash
-npm ci && npm run build
-```
-
-Configure the store in admin: **categories → products → payment methods** (payment methods are required for checkout).
-
-## Quick start (Laravel Sail)
+3. Start Sail and run migrations:
 
 ```bash
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan migrate
-./vendor/bin/sail artisan app:init-admin
+```
+
+4. Build frontend assets:
+
+```bash
 npm ci && npm run build
 ```
 
-Sail runs **php artisan serve** and a **queue worker** via supervisord.
+5. Open `http://localhost` (`APP_URL` in `.env`).
 
-## First-run admin
+`.env.example` uses `DB_HOST=mysql` and `REDIS_HOST=redis` for Sail. Do not use `127.0.0.1` for those hosts inside Docker.
 
-| Method | Command / URL |
-|--------|----------------|
-| CLI (preferred) | `php artisan app:init-admin` |
-| Web fallback | `/setup` (404 after first admin) |
+| Issue | Fix |
+|-------|-----|
+| DB/Redis connection refused | Set `DB_HOST=mysql`, `REDIS_HOST=redis` |
+| Port already in use | Raise `FORWARD_DB_PORT` / `FORWARD_REDIS_PORT` in `.env` |
+| No live notifications locally | Set Pusher vars or `BROADCAST_CONNECTION=log` |
 
-- Strong password required (12+ chars, mixed case, numbers, symbols).
+## Admin Setup
+
+- Run: `./vendor/bin/sail artisan app:init-admin`
+- Or visit `/setup` once before any admin exists (404 after first admin).
+- Password: 12+ chars with mixed case, numbers, and symbols.
 - No demo users or catalog seed data.
-- Public registration always creates `user` role only.
-- **Admin password changes are CLI-only:** `php artisan admin:change-password` (no admin account UI).
+- Add **payment methods** in admin before checkout works.
+- Admin password changes: CLI only — `./vendor/bin/sail artisan admin:change-password` (no admin account UI).
 
-## Admin customization
-
-| Area | Route |
-|------|--------|
-| Favicon & logo | `/admin/settings/branding` |
-| Payment methods | `/admin/settings/payments` |
-| Category icons | `/admin/categories` (upload on create/edit) |
-
-## Environment variables
-
-| Variable | Purpose |
-|----------|---------|
-| `APP_NAME` | Application name |
-| `STORE_NAME` | Storefront display name |
-| `CURRENCY` / `CURRENCY_SYMBOL` | Money formatting |
-| `DB_*` | MySQL connection |
-| `REDIS_*` or `REDIS_URL` | Redis for session, cache, queue |
-| `SESSION_DRIVER` | Use `redis` in production |
-| `CACHE_STORE` | Use `redis` |
-| `QUEUE_CONNECTION` | Use `redis` + worker process |
-| `BROADCAST_CONNECTION` | `pusher` (or `log` for local smoke tests) |
-| `PUSHER_*` / `VITE_PUSHER_*` | Realtime notifications |
-| `FILESYSTEM_DISK` | Default disk |
-| `FILESYSTEM_PRODUCT_DISK` | Product / QR images (`public` or `s3`) |
-| `FILESYSTEM_PRIVATE_DISK` | Payment proofs (`private` or `s3`) |
-
-See [docs/LOCAL-ENV.md](docs/LOCAL-ENV.md) for a full local setup guide, plus [`.env.example`](.env.example) and [`.env.render.example`](.env.render.example).
-
-## Deploy on Render
-
-Pro blueprint: web + worker + MySQL + Redis + S3. Full guide: [docs/DEPLOY-RENDER.md](docs/DEPLOY-RENDER.md)
-
-## Development
+## Testing
 
 ```bash
 ./vendor/bin/sail test
-./vendor/bin/sail artisan migrate
-./vendor/bin/sail logs -f
 ```
 
-## Documentation
+## Deployment
 
-| File | Description |
-|------|-------------|
-| [projectSpec.md](projectSpec.md) | Architecture and flows |
-| [skill.md](skill.md) | Agent domain reference |
-| [agent.md](agent.md) | How AI should work in this repo |
-| [docs/LOCAL-ENV.md](docs/LOCAL-ENV.md) | Local `.env` configuration |
-| [docs/DEPLOY-RENDER.md](docs/DEPLOY-RENDER.md) | Render Pro deployment |
-| [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md) | Redis + Pusher setup |
+Deploy on **Render** with the Pro blueprint in [`render.yaml`](render.yaml) (web + worker + MySQL).
 
-## Security
+1. Push the repo to GitHub.
+2. Render → **New** → **Blueprint** → connect the repo.
+3. Set secrets: `APP_KEY`, `APP_URL`, `REDIS_URL`, `PUSHER_*`, `VITE_PUSHER_*`, `AWS_*` (S3 uploads).
+4. Deploy (migrations run on start; no seeders).
+5. Create the first admin once: `php artisan app:init-admin` (Render shell) or `/setup`.
 
-- Session auth, CSRF on web routes, FormRequest validation
-- Rate limits on registration, checkout, payment upload
-- `role` not mass-assignable; admin only via init command or `/setup`
-- Inventory `lockForUpdate()` on checkout; SHA-256 duplicate payment proof detection
+Production env template: [`.env.render.example`](.env.render.example).
 
-## License
-
-Use as a template for your own store projects.
+Required production drivers: `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`, `BROADCAST_CONNECTION=pusher`, plus a queue worker (included in the blueprint).

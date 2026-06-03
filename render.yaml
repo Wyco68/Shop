@@ -1,5 +1,5 @@
 # Render Blueprint — production template (Pro web + worker + MySQL + Redis)
-# Docs: docs/DEPLOY-RENDER.md
+# Docs: README.md → Deployment
 
 databases:
   - name: ecommerce-mysql

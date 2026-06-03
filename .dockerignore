@@ -19,7 +19,6 @@ supervisord.conf
 patch_show.py
 futureImplementation.md
 projectSpec.md
-workflow_guideline.md
 project-analysis.json
 Homestead.json
 Homestead.yaml

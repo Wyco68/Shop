@@ -1,70 +1,72 @@
-# 1. Overview
+# Overview
 
-- **Purpose:** Reusable e-commerce platform for any product-based business (physical or digital).
-- **Target users:** Shoppers and store administrators.
-- **Scope:** Monolithic Laravel app — storefront, admin, cart, manual payment checkout, inventory, refunds, notifications.
+- Reusable e-commerce platform for physical or digital products.
+- Users: shoppers and store administrators.
+- Monolithic Laravel app: storefront, admin, cart, manual payment checkout, inventory, refunds, notifications.
 
-# 2. Architecture
+# Architecture
 
-- **Frontend:** Server-rendered Blade + Tailwind + Alpine.js.
+- **UI:** Blade + Tailwind + Alpine.js.
 - **Backend:** Laravel 11 services, Eloquent, MySQL.
-- **Data flow:** Request → middleware → controller → service (transactions) → MySQL. Events → Pusher → Echo/Alpine.
-- **Bootstrap:** Empty migrations only; first admin via `app:init-admin` or `/setup`.
+- **Flow:** Request → middleware → controller → service (transactions) → MySQL. Events → Pusher → Echo/Alpine.
+- **Bootstrap:** Migrations only; first admin via README Admin Setup.
 
-# 3. Features
+# Features
 
 ## Catalog
 
 - Products, categories, optional brands, variants, per-variant inventory.
-- `products.compatibility` JSON = optional metadata (not domain-specific).
+- `products.compatibility` JSON = optional metadata.
 - Cached category lists and product listing (Redis).
 
 ## Checkout
 
-- DB cart → payment method selection → order → transfer instructions → proof upload.
-- Duplicate proofs blocked via SHA-256 hash.
+- DB cart → payment method → order → transfer instructions → proof upload.
+- Duplicate proofs blocked (SHA-256 hash).
 - Currency from `config('shop.currency')`.
 
 ## Admin
 
-- Dashboard, products, categories, orders, payments, refunds, users, **payment methods**.
+- Dashboard, products, categories, orders, payments, refunds, users, payment methods.
+- Branding: `/admin/settings/branding`
+- Payment methods: `/admin/settings/payments`
+- Category icons: `/admin/categories`
 - Empty-state hints until catalog and payment methods exist.
 
-# 4. Authentication
+# Authentication
 
 - Session-based (Breeze-style).
 - Roles: `admin`, `user` (`App\Enums\UserRole`).
 - Admin: one-time bootstrap only; no promotion via registration or user UI.
 
-# 5. Database
+# Database
 
 **Tables:** users, products, categories, brands, product_variants, inventories, inventory_movements, discounts, carts, orders, payments, payment_methods, notifications, coupons, order_status_histories, refund_requests, user_spending.
 
-**Inventory movement types:** `IN`, `OUT`, `RESERVE`, `RELEASE` only.
+**Inventory movements:** `IN`, `OUT`, `RESERVE`, `RELEASE` only.
 
 **Orders:** Snapshots on `order_items`; never use live catalog price after order creation.
 
-# 6. Realtime
+# Realtime
 
 - Private channel `user.{id}` for notifications.
 - Persisted in DB; Alpine + sessionStorage on client.
 
-# 7. Security
+# Security
 
 - Policies + `is_admin` middleware.
 - Throttle: auth (register), checkout (order + payment).
-- Files: public disk for catalog images, private/S3 for proofs.
+- Public disk for catalog images; private/S3 for payment proofs.
 
-# 8. Performance
+# Performance
 
 - Eager loading on listings; indexes on `products(is_active, created_at)`, `categories(is_active, slug)`.
 - Pagination on all list endpoints.
 
-# 9. Deployment
+# Deployment
 
-- Local: Docker Compose or Sail with Redis + queue worker.
-- Production: Render Pro (see `docs/DEPLOY-RENDER.md`) — MySQL, Redis, worker, S3, Pusher.
+- Production: see README → Deployment.
 
-# 10. Out of scope
+# Out of scope
 
 - Stripe/PayPal automation, multi-tenant marketplace.
