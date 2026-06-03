@@ -43,6 +43,8 @@ class PaymentMethod extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->qr_image_path);
+        $disk = config('filesystems.product_disk', 'public');
+
+        return Storage::disk($disk)->url($this->qr_image_path);
     }
 }

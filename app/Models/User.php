@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,7 +13,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'phone_num', 'address', 'role', 'is_active',
+        'name', 'email', 'password', 'phone_num', 'address', 'is_active',
     ];
 
     protected $hidden = [
@@ -30,7 +31,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === UserRole::Admin->value;
+    }
+
+    public static function hasAdmin(): bool
+    {
+        return static::query()->where('role', UserRole::Admin->value)->exists();
     }
 
     public function orders()

@@ -23,7 +23,7 @@ class PaymentService
             'provider' => $provider,
             'status'   => Payment::STATUS_PENDING,
             'amount'   => $order->total,
-            'currency' => $order->currency ?? 'USD',
+            'currency' => $order->currency ?? config('shop.currency', 'USD'),
         ]);
     }
 
@@ -40,7 +40,7 @@ class PaymentService
             throw new \RuntimeException('This payment proof has already been submitted for another order.');
         }
 
-        $path = $file->store('payment-proofs', 'private');
+        $path = $file->store('payment-proofs', config('filesystems.private_disk', 'private'));
 
         $payment->update([
             'proof_path' => $path,

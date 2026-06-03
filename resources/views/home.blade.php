@@ -6,10 +6,10 @@
 <section class="bg-[#fbfbfd] text-gray-900 py-24 border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 class="text-5xl sm:text-7xl font-bold tracking-tight mb-6">
-            Best Car Parts for Your Vehicle.
+            Welcome to {{ config('shop.name') }}.
         </h1>
         <p class="text-xl text-gray-500 mb-10 max-w-2xl mx-auto font-medium">
-            Quality parts. Trusted brands. Fast shipping. Find everything your vehicle needs in one place.
+            Quality products. Trusted brands. Fast shipping. Everything you need in one place.
         </p>
         <a href="{{ route('products.index') }}"
            class="inline-block bg-black text-white font-semibold px-8 py-4 rounded-full hover:scale-105 transition-transform duration-300 shadow-md">
@@ -64,7 +64,7 @@
                         {{ $product->name }}
                     </h3>
                     <div class="mt-4 flex items-end justify-between">
-                        <span class="text-xl font-bold tracking-tight text-gray-900">${{ number_format($product->base_price, 2) }}</span>
+                        <span class="text-xl font-bold tracking-tight text-gray-900"><x-money :amount="$product->base_price" /></span>
                     </div>
                 </div>
             </a>

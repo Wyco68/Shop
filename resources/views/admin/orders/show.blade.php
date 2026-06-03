@@ -83,10 +83,10 @@
                                     {{ $item->quantity }}
                                 </td>
                                 <td class="px-6 py-4 text-slate-600 font-medium text-right">
-                                    ${{ number_format($item->final_price, 2) }}
+                                    <x-money :amount="$item->final_price" />
                                 </td>
                                 <td class="px-6 py-4 font-extrabold text-slate-800 text-right">
-                                    ${{ number_format($item->final_price * $item->quantity, 2) }}
+                                    <x-money :amount="$item->final_price * $item->quantity" />
                                 </td>
                             </tr>
                         @endforeach
@@ -97,17 +97,17 @@
                 <div class="mt-6 border-t border-slate-100 pt-6 flex flex-col items-end gap-2.5 text-sm font-medium text-slate-500">
                     <div class="flex justify-between w-64">
                         <span>Subtotal</span>
-                        <span class="text-slate-700 font-semibold">${{ number_format($order->subtotal, 2) }}</span>
+                        <span class="text-slate-700 font-semibold"><x-money :amount="$order->subtotal" /></span>
                     </div>
                     @if($order->discount_total > 0)
                         <div class="flex justify-between w-64 text-emerald-600 font-semibold">
                             <span>Discount Total</span>
-                            <span>-${{ number_format($order->discount_total, 2) }}</span>
+                            <span>-<x-money :amount="$order->discount_total" /></span>
                         </div>
                     @endif
                     <div class="flex justify-between w-64 text-base font-extrabold text-slate-800 border-t border-slate-100 pt-3 mt-1.5">
                         <span>Grand Total</span>
-                        <span class="text-slate-900">${{ number_format($order->total, 2) }}</span>
+                        <span class="text-slate-900"><x-money :amount="$order->total" /></span>
                     </div>
                 </div>
             </x-admin.card>

@@ -39,7 +39,7 @@
         <div class="h-16 px-6 border-b border-slate-800 flex items-center gap-3">
             <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 w-auto filter brightness-0 invert" />
             <div>
-                <span class="font-bold text-white tracking-wide text-lg">CarPart</span>
+                <span class="font-bold text-white tracking-wide text-lg">{{ config('shop.name') }}</span>
                 <span class="text-[10px] block text-sky-400 font-semibold tracking-wider uppercase -mt-1">Admin Console</span>
             </div>
         </div>
@@ -102,6 +102,14 @@
                         Categories
                     </a>
 
+                    <a href="{{ route('admin.payment-methods.index') }}" 
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.payment-methods.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
+                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.payment-methods.*') ? 'text-sky-400' : 'text-slate-400 group-hover:text-white transition-colors' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Payment Methods
+                    </a>
+
                     <a href="{{ route('admin.users.index') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.users.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
                         <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.users.*') ? 'text-sky-400' : 'text-slate-400 group-hover:text-white transition-colors' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -122,7 +130,7 @@
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-semibold text-white truncate">{{ Auth::user()->name ?? 'Administrator' }}</p>
-                    <p class="text-xs text-slate-500 truncate">{{ Auth::user()->email ?? 'admin@carpart.com' }}</p>
+                    <p class="text-xs text-slate-500 truncate">{{ Auth::user()->email }}</p>
                 </div>
             </div>
         </div>
@@ -239,7 +247,7 @@
         
         <!-- Sticky Bottom Copyright -->
         <footer class="py-4 border-t border-slate-100 px-6 text-center text-xs text-slate-400 bg-white shrink-0">
-            <p>&copy; {{ date('Y') }} CarPart Admin Console. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} {{ config('shop.name') }} Admin. All rights reserved.</p>
         </footer>
     </div>
 

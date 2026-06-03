@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\UserAnalyticsService;
@@ -18,7 +19,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::where('role', 'user')
+        $query = User::where('role', UserRole::User->value)
             ->orderByDesc('created_at');
 
         if ($request->filled('search')) {

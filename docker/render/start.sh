@@ -49,8 +49,9 @@ php artisan optimize:clear --no-interaction 2>/dev/null || true
 
 php artisan migrate --force --no-interaction
 
-if [ "${APP_DEMO_MODE:-false}" = "true" ]; then
-    php artisan db:seed --class=RenderDemoSeeder --force --no-interaction
+if ! php artisan tinker --execute="echo \\App\\Models\\User::hasAdmin() ? 'yes' : 'no';" 2>/dev/null | grep -q yes; then
+    echo "[start] No admin user yet. Run once: php artisan app:init-admin (Render Shell)"
+    echo "[start] Or visit /setup before any admin exists."
 fi
 
 if [ -z "${APP_URL:-}" ] && [ -n "${RENDER_EXTERNAL_URL:-}" ]; then

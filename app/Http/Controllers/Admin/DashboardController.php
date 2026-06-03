@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
+use App\Models\Product;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +37,12 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'lowStock', 'recentOrders'));
+        $setupHints = [
+            'needs_categories' => Category::count() === 0,
+            'needs_products' => Product::count() === 0,
+            'needs_payment_methods' => PaymentMethod::where('is_active', true)->count() === 0,
+        ];
+
+        return view('admin.dashboard', compact('stats', 'lowStock', 'recentOrders', 'setupHints'));
     }
 }

@@ -1,4 +1,4 @@
-# CarPart — production image for Render (portfolio / demo)
+# Production image for Render (web + worker)
 # syntax=docker/dockerfile:1
 
 FROM node:22-bookworm-slim AS frontend
@@ -12,11 +12,10 @@ COPY vite.config.js ./
 COPY resources ./resources
 COPY public ./public
 
-# Pusher / Vite (set in Render Environment before build)
 ARG VITE_PUSHER_APP_KEY=
 ARG VITE_PUSHER_APP_CLUSTER=mt1
 ARG VITE_PUSHER_SCHEME=https
-ARG VITE_APP_NAME=CarPart
+ARG VITE_APP_NAME=E-Commerce
 
 ENV VITE_PUSHER_APP_KEY=$VITE_PUSHER_APP_KEY \
     VITE_PUSHER_APP_CLUSTER=$VITE_PUSHER_APP_CLUSTER \
@@ -49,15 +48,17 @@ FROM php:8.4-cli-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
-    libsqlite3-dev \
     libzip-dev \
+    libpng-dev \
     libonig-dev \
     && docker-php-ext-install -j$(nproc) \
         bcmath \
         mbstring \
         opcache \
-        pdo_sqlite \
+        pdo_mysql \
         zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=vendor /app /var/www/html

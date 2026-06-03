@@ -35,7 +35,7 @@ document.addEventListener('alpine:init', () => {
             }
             const currentUserId = userIdMeta.content;
             try {
-                const data = sessionStorage.getItem('carpart_notifications');
+                const data = sessionStorage.getItem('store_notifications');
                 if (data) {
                     const parsed = JSON.parse(data);
                     if (parsed.userId === currentUserId) {
@@ -56,7 +56,7 @@ document.addEventListener('alpine:init', () => {
             if (!userIdMeta) return;
             const currentUserId = userIdMeta.content;
             try {
-                sessionStorage.setItem('carpart_notifications', JSON.stringify({
+                sessionStorage.setItem('store_notifications', JSON.stringify({
                     userId: currentUserId,
                     notifications: this.notifications,
                     unreadCount: this.unreadCount,
@@ -72,7 +72,7 @@ document.addEventListener('alpine:init', () => {
             this.unreadCount = 0;
             this.nextPageUrl = null;
             try {
-                sessionStorage.removeItem('carpart_notifications');
+                sessionStorage.removeItem('store_notifications');
             } catch (e) {}
         },
 

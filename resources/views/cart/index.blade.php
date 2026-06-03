@@ -31,11 +31,11 @@
                             
                             <div class="text-right">
                                 @if($item['quantity'] > 1)
-                                    <p class="text-xs text-gray-400 mb-1 font-medium tracking-wide">${{ number_format(($item['final_line_total'] / $item['quantity']), 2) }} each</p>
+                                    <p class="text-xs text-gray-400 mb-1 font-medium tracking-wide"><x-money :amount="($item['final_line_total'] / $item['quantity'])" /> each</p>
                                 @endif
-                                <p class="text-xl font-bold text-gray-900">${{ number_format($item['final_line_total'], 2) }}</p>
+                                <p class="text-xl font-bold text-gray-900"><x-money :amount="$item['final_line_total']" /></p>
                                 @if($item['discount_amount'] > 0)
-                                    <p class="text-sm text-red-500 font-medium">Saved ${{ number_format($item['discount_amount'] * $item['quantity'], 2) }}</p>
+                                    <p class="text-sm text-red-500 font-medium">Saved <x-money :amount="$item['discount_amount'] * $item['quantity']" /></p>
                                 @endif
                             </div>
                         </div>
@@ -56,12 +56,12 @@
                     <div class="space-y-4 text-sm text-gray-600 border-b border-gray-100 pb-6 mb-6">
                         <div class="flex justify-between">
                             <span>Subtotal</span>
-                            <span class="font-medium text-gray-900">${{ number_format($subtotal, 2) }}</span>
+                            <span class="font-medium text-gray-900"><x-money :amount="$subtotal" /></span>
                         </div>
                         @if($discount_total > 0)
                         <div class="flex justify-between text-red-500">
                             <span>Discount</span>
-                            <span class="font-medium">-${{ number_format($discount_total, 2) }}</span>
+                            <span class="font-medium">-<x-money :amount="$discount_total" /></span>
                         </div>
                         @endif
                         <div class="flex justify-between">
@@ -72,7 +72,7 @@
                     
                     <div class="flex justify-between items-center mb-8">
                         <span class="text-base font-semibold text-gray-900">Total</span>
-                        <span class="text-2xl font-bold text-gray-900">${{ number_format($total, 2) }}</span>
+                        <span class="text-2xl font-bold text-gray-900"><x-money :amount="$total" /></span>
                     </div>
                     
                     <form action="{{ route('checkout.process') }}" method="POST">

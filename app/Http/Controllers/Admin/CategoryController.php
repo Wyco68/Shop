@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Support\StoreCache;
 
 class CategoryController extends Controller
 {
@@ -28,7 +28,7 @@ class CategoryController extends Controller
 
         Category::create($request->only('name'));
 
-        Cache::forget('categories.active');
+        StoreCache::forgetCategories();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created.');
     }
@@ -44,7 +44,7 @@ class CategoryController extends Controller
 
         $category->update($request->only('name', 'is_active'));
 
-        Cache::forget('categories.active');
+        StoreCache::forgetCategories();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated.');
     }
@@ -55,7 +55,7 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        Cache::forget('categories.active');
+        StoreCache::forgetCategories();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category deleted.');
     }

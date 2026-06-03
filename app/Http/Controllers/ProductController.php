@@ -5,30 +5,42 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Support\StoreCache;
 use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Cache::remember('categories.active', 3600, function () {
+        $categories = Cache::remember(StoreCache::CATEGORIES_ACTIVE, 3600, function () {
             return Category::where('is_active', true)->get();
         });
 
-        $query = Product::with('category', 'discounts', 'defaultVariant.inventory')
-            ->where('is_active', true);
+        $filters = array_filter([
+            'category' => $request->input('category'),
+            'min_price' => $request->input('min_price'),
+            'max_price' => $request->input('max_price'),
+        ], fn ($v) => $v !== null && $v !== '');
 
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->integer('category'));
-        }
-        if ($request->filled('min_price')) {
-            $query->where('base_price', '>=', (float) $request->input('min_price'));
-        }
-        if ($request->filled('max_price')) {
-            $query->where('base_price', '<=', (float) $request->input('max_price'));
-        }
+        $page = max(1, (int) $request->input('page', 1));
+        $cacheKey = StoreCache::productListingKey($filters, $page);
 
-        $products = $query->paginate(20)->withQueryString();
+        $products = Cache::remember($cacheKey, 600, function () use ($filters, $page) {
+            $query = Product::with('category', 'discounts', 'defaultVariant.inventory')
+                ->where('is_active', true);
+
+            if (! empty($filters['category'])) {
+                $query->where('category_id', (int) $filters['category']);
+            }
+            if (! empty($filters['min_price'])) {
+                $query->where('base_price', '>=', (float) $filters['min_price']);
+            }
+            if (! empty($filters['max_price'])) {
+                $query->where('base_price', '<=', (float) $filters['max_price']);
+            }
+
+            return $query->paginate(20, ['*'], 'page', $page)->withQueryString();
+        });
 
         return view('products', compact('products', 'categories'));
     }

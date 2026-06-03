@@ -42,11 +42,12 @@ class OrderController extends Controller
 
     public function downloadProof(Payment $payment): StreamedResponse
     {
-        if (!$payment->proof_path || !Storage::disk('private')->exists($payment->proof_path)) {
+        $privateDisk = config('filesystems.private_disk', 'private');
+        if (!$payment->proof_path || !Storage::disk($privateDisk)->exists($payment->proof_path)) {
             abort(404);
         }
 
-        return Storage::disk('private')->response($payment->proof_path);
+        return Storage::disk($privateDisk)->response($payment->proof_path);
     }
 
     public function processPayment(Order $order)

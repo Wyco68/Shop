@@ -1,6 +1,6 @@
 # Workflow Guideline
 
-This document outlines the standard development workflow and implementation principles for the CarPart E-Commerce Platform.
+This document outlines the standard development workflow and implementation principles for the E-Commerce Platform template.
 
 ## 1. Development Workflow
 

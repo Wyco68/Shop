@@ -7,24 +7,24 @@
                 <p class="font-medium text-gray-900 line-clamp-1">{{ $item['product']->name }}</p>
                 <p class="text-xs text-gray-400">× {{ $item['quantity'] }}</p>
             </div>
-            <span class="font-semibold text-gray-900 shrink-0">${{ number_format($item['final_line_total'], 2) }}</span>
+            <span class="font-semibold text-gray-900 shrink-0"><x-money :amount="$item['final_line_total']" /></span>
         </div>
         @endforeach
     </div>
     <div class="mt-4 pt-4 border-t border-gray-100 space-y-2 text-sm">
         <div class="flex justify-between text-gray-500">
             <span>Subtotal</span>
-            <span>${{ number_format($summary['subtotal'], 2) }}</span>
+            <span><x-money :amount="$summary['subtotal']" /></span>
         </div>
         @if($summary['discount_total'] > 0)
         <div class="flex justify-between text-red-500">
             <span>Discount</span>
-            <span>− ${{ number_format($summary['discount_total'], 2) }}</span>
+            <span>− <x-money :amount="$summary['discount_total']" /></span>
         </div>
         @endif
         <div class="flex justify-between font-bold text-gray-900 text-base border-t border-gray-100 pt-2">
             <span>Total</span>
-            <span>${{ number_format($summary['total'], 2) }}</span>
+            <span><x-money :amount="$summary['total']" /></span>
         </div>
     </div>
     <a href="{{ route('cart.index') }}"

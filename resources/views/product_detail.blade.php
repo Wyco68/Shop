@@ -32,7 +32,7 @@
 
             {{-- Price & Discount --}}
             <div class="flex items-center gap-4 mb-8">
-                <span class="text-3xl font-bold text-gray-900">${{ number_format($product->base_price, 2) }}</span>
+                <span class="text-3xl font-bold text-gray-900"><x-money :amount="$product->base_price" /></span>
                 @php $activeDiscount = $product->discounts->first(); @endphp
                 @if($activeDiscount)
                     <span class="bg-black text-white text-sm px-3 py-1 rounded-full font-bold tracking-wide">
@@ -60,7 +60,7 @@
                                     @if($variant->available_stock > 0)
                                     <option value="{{ $variant->id }}">
                                         {{ $variant->name ?? 'Default' }}
-                                        @if($variant->price_override) — ${{ number_format($variant->price_override, 2) }} @endif
+                                        @if($variant->price_override) — <x-money :amount="$variant->price_override" /> @endif
                                         ({{ $variant->available_stock }} in stock)
                                     </option>
                                     @endif

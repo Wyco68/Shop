@@ -1,81 +1,111 @@
-# CarPart E-Commerce Platform
+# E-Commerce Platform Template
 
-A production-ready monolithic e-commerce platform built with Laravel 11, featuring robust inventory management, a secure pay-by-transfer flow with payment proof verification, and real-time notifications.
+A production-ready, product-agnostic Laravel e-commerce starter: catalog with variants, inventory, cart, pay-by-transfer checkout with proof verification, admin dashboard, and real-time notifications.
 
-## Core Features
-- Product catalog with categories, brands, and variants.
-- DB-backed shopping cart.
-- Pay-by-transfer checkout with SHA-256 duplicate proof upload detection.
-- ACID-compliant inventory management using pessimistic locking to prevent overselling.
-- Admin dashboard for manual payment verification, order management, and refund processing.
-- Real-time notifications using Pusher Channels and Alpine.js.
+## Tech stack
 
-## Tech Stack
 - **Backend:** Laravel 11, PHP 8.4
-- **Database:** MySQL 8 (Redis optional for cache/sessions/queues)
-- **Frontend:** Blade, TailwindCSS v4, Alpine.js
+- **Database:** MySQL 8
+- **Cache / sessions / queues:** Redis
+- **Frontend:** Blade, Tailwind CSS v4, Alpine.js
 - **Realtime:** Pusher Channels, Laravel Echo
-- **Infrastructure:** Docker (Laravel Sail)
+- **Infrastructure:** Docker Compose quickstart + Laravel Sail
 
-## Setup Instructions
+## Quick start (Docker Compose)
 
-The project uses Docker via Laravel Sail. Run all commands from WSL.
+```bash
+cp .env.example .env
+docker compose -f docker/docker-compose.yml up --build
+```
 
-1. **Start the Containers:**
-   ```bash
-   ./vendor/bin/sail up -d
-   ```
-2. **Initialize Database:**
-   ```bash
-   ./vendor/bin/sail artisan migrate:fresh --seed
-   ```
-3. **Install Frontend Assets:**
-   ```bash
-   npm install
-   npm run build
-   ```
+Then create the first administrator (one-time):
 
-## Environment Variables
-- `APP_URL`: Application URL.
-- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: MySQL connection settings.
-- `REDIS_HOST`, `REDIS_PORT` or `REDIS_URL`: optional Redis connection for cache/sessions/queues.
-- `BROADCAST_CONNECTION=pusher`: Pusher Channels for live notifications (see [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)).
-- `REDIS_URL`: Upstash (Render) or Sail Redis (local) when enabling Redis-backed cache/sessions.
-- `FILESYSTEM_DISK=local`: Storage disk for payment proofs.
+```bash
+docker compose -f docker/docker-compose.yml exec app php artisan app:init-admin
+```
 
-## Development Commands
-- **Test Suite:** `./vendor/bin/sail test`
-- **Application Shell:** `./vendor/bin/sail shell`
-- **View Logs:** `./vendor/bin/sail logs -f`
-- **Stop Environment:** `./vendor/bin/sail stop`
+Or visit `http://localhost:8080/setup` before any admin exists.
 
-## Security Considerations
-- **Authentication:** Standard Laravel session-based authentication.
-- **Authorization:** `is_admin` middleware for admin routes, Eloquent Policies for resource access.
-- **Race Conditions:** `lockForUpdate()` is used on inventory rows to prevent overselling.
-- **File Uploads:** Payment proofs are validated and hashed (SHA-256) to block duplicates.
+Build frontend assets (host or inside container):
 
-## Upstash Redis + Pusher (optional on Render)
+```bash
+npm ci && npm run build
+```
 
-Use **Pusher** for live notifications, and optionally add **Upstash Redis** for cache/sessions: [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md)
+Configure the store in admin: **categories → products → payment methods** (payment methods are required for checkout).
 
-## Deploy to Production
+## Quick start (Laravel Sail)
 
-For a production-grade setup (managed MySQL, Redis queues, worker service, persistent uploads, and hardening checklist): [docs/HOSTING-PRODUCTION.md](docs/HOSTING-PRODUCTION.md)
+```bash
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail artisan app:init-admin
+npm ci && npm run build
+```
 
-## Deploy on Render (portfolio demo)
+Sail runs **php artisan serve** and a **queue worker** via supervisord.
 
-Host a **free portfolio demo** on Render (Docker, SQLite, lightweight seed):
+## First-run admin
 
-1. Push to GitHub → [Render Blueprint](https://dashboard.render.com) → connect repo (`render.yaml`).
-2. Set **`APP_URL`** to your `https://….onrender.com` URL after the first deploy.
-3. Open the site — demo logins appear in the top banner.
+| Method | Command / URL |
+|--------|----------------|
+| CLI (preferred) | `php artisan app:init-admin` |
+| Web fallback | `/setup` (404 after first admin) |
 
-**Full guide:** [docs/HOSTING-RENDER.md](docs/HOSTING-RENDER.md)
+- Strong password required (12+ chars, mixed case, numbers, symbols).
+- No demo users or catalog seed data.
+- Public registration always creates `user` role only.
 
-| Demo login | Email | Password |
-|------------|--------|----------|
-| Admin | `admin@carpart.test` | `password` |
-| Customer | `user@carpart.test` | `password` |
+## Environment variables
 
-> Free tier sleeps when idle; first visit may take ~30–60s. Local full catalog: `./vendor/bin/sail artisan migrate:fresh --seed`.
+| Variable | Purpose |
+|----------|---------|
+| `APP_NAME` | Application name |
+| `STORE_NAME` | Storefront display name |
+| `CURRENCY` / `CURRENCY_SYMBOL` | Money formatting |
+| `DB_*` | MySQL connection |
+| `REDIS_*` or `REDIS_URL` | Redis for session, cache, queue |
+| `SESSION_DRIVER` | Use `redis` in production |
+| `CACHE_STORE` | Use `redis` |
+| `QUEUE_CONNECTION` | Use `redis` + worker process |
+| `BROADCAST_CONNECTION` | `pusher` (or `log` for local smoke tests) |
+| `PUSHER_*` / `VITE_PUSHER_*` | Realtime notifications |
+| `FILESYSTEM_DISK` | Default disk |
+| `FILESYSTEM_PRODUCT_DISK` | Product / QR images (`public` or `s3`) |
+| `FILESYSTEM_PRIVATE_DISK` | Payment proofs (`private` or `s3`) |
+
+See [docs/LOCAL-ENV.md](docs/LOCAL-ENV.md) for a full local setup guide, plus [`.env.example`](.env.example) and [`.env.render.example`](.env.render.example).
+
+## Deploy on Render
+
+Pro blueprint: web + worker + MySQL + Redis + S3. Full guide: [docs/DEPLOY-RENDER.md](docs/DEPLOY-RENDER.md)
+
+## Development
+
+```bash
+./vendor/bin/sail test
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail logs -f
+```
+
+## Documentation
+
+| File | Description |
+|------|-------------|
+| [projectSpec.md](projectSpec.md) | Architecture and flows |
+| [skill.md](skill.md) | Agent domain reference |
+| [agent.md](agent.md) | How AI should work in this repo |
+| [docs/LOCAL-ENV.md](docs/LOCAL-ENV.md) | Local `.env` configuration |
+| [docs/DEPLOY-RENDER.md](docs/DEPLOY-RENDER.md) | Render Pro deployment |
+| [docs/UPSTASH-PUSHER.md](docs/UPSTASH-PUSHER.md) | Redis + Pusher setup |
+
+## Security
+
+- Session auth, CSRF on web routes, FormRequest validation
+- Rate limits on registration, checkout, payment upload
+- `role` not mass-assignable; admin only via init command or `/setup`
+- Inventory `lockForUpdate()` on checkout; SHA-256 duplicate payment proof detection
+
+## License
+
+Use as a template for your own store projects.

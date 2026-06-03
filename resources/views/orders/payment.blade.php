@@ -7,7 +7,7 @@
         <a href="{{ route('orders.show', $order) }}" class="text-sm text-gray-400 hover:text-gray-600">← Order #{{ $order->id }}</a>
         <h1 class="text-2xl font-bold text-gray-900 mt-2">Complete Your Payment</h1>
         <p class="text-sm text-gray-500 mt-1">
-            Confirm your contact details and upload proof so we can verify your ${{ number_format($order->total, 2) }} payment.
+            Confirm your contact details and upload proof so we can verify your <x-money :amount="$order->total" /> payment.
         </p>
     </div>
 

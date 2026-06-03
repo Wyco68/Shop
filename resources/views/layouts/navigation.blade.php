@@ -12,7 +12,7 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-6 sm:-my-px sm:ms-8 sm:flex">
-                    @if(!Auth::check() || Auth::user()->role !== 'admin')
+                    @if(!Auth::check() || !Auth::user()->isAdmin())
                         <x-nav-link :href="route('home')" :active="request()->routeIs('home')" class="text-sm tracking-wide {{ request()->routeIs('home') ? 'text-black' : 'text-gray-500 hover:text-black transition-colors' }}">
                             {{ __('Home') }}
                         </x-nav-link>
@@ -21,7 +21,7 @@
                         </x-nav-link>
                     @endif
                     @auth
-                        @if(Auth::user()->role === 'admin')
+                        @if(Auth::user()->isAdmin())
                             <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-sm tracking-wide {{ request()->routeIs('admin.dashboard') ? 'text-black font-bold' : 'text-gray-500 hover:text-black transition-colors' }}">
                                 {{ __('Dashboard') }}
                             </x-nav-link>
@@ -96,7 +96,7 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            @if(!Auth::check() || Auth::user()->role !== 'admin')
+            @if(!Auth::check() || !Auth::user()->isAdmin())
                 <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                     {{ __('Home') }}
                 </x-responsive-nav-link>
@@ -105,7 +105,7 @@
                 </x-responsive-nav-link>
             @endif
             @auth
-                @if(Auth::user()->role === 'admin')
+                @if(Auth::user()->isAdmin())
                     <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                         {{ __('Dashboard') }}
                     </x-responsive-nav-link>

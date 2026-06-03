@@ -9,15 +9,14 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
+    /**
+     * Intentionally empty — no demo catalog or users.
+     *
+     * After migrate, create the first admin:
+     *   php artisan app:init-admin
+     */
     public function run(): void
     {
-        $this->call([
-            BrandSeeder::class,
-            CategorySeeder::class,
-            CatalogSeeder::class,
-            DiscountSeeder::class,
-            PaymentMethodSeeder::class,
-            UserSeeder::class,
-        ]);
+        //
     }
 }

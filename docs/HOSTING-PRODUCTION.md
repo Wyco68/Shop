@@ -1,6 +1,6 @@
-# CarPart Production Hosting Guide
+# Production Hosting Guide
 
-This guide explains how to run CarPart in production with persistent data, background jobs, object storage, and realtime notifications.
+This guide explains how to run this e-commerce template in production with persistent data, background jobs, object storage, and realtime notifications.
 
 It is designed for the current stack in this repo:
 

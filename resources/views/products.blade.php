@@ -98,7 +98,7 @@
                             </h3>
                             <div class="mt-4 flex items-end justify-between">
                                 <div class="flex flex-col">
-                                    <span class="text-xl font-bold tracking-tight text-gray-900">${{ number_format($product->base_price, 2) }}</span>
+                                    <span class="text-xl font-bold tracking-tight text-gray-900"><x-money :amount="$product->base_price" /></span>
                                 </div>
                                 @php $stock = $product->defaultVariant?->available_stock ?? 0; @endphp
                                 @if($stock > 0)

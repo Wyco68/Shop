@@ -83,7 +83,7 @@
                         
                         <!-- Total -->
                         <td class="px-6 py-4 font-extrabold text-slate-800">
-                            ${{ number_format($order->total, 2) }}
+                            <x-money :amount="$order->total" />
                         </td>
                         
                         <!-- Payment -->

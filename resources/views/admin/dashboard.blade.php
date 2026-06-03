@@ -16,6 +16,24 @@
         </div>
     </div>
 
+    @if(($setupHints['needs_categories'] ?? false) || ($setupHints['needs_products'] ?? false) || ($setupHints['needs_payment_methods'] ?? false))
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-amber-900">Complete your store setup</h2>
+        <p class="text-sm text-amber-800 mt-1">Add the essentials so customers can browse and checkout.</p>
+        <ul class="mt-4 space-y-2 text-sm font-medium text-amber-900">
+            @if($setupHints['needs_categories'])
+            <li><a href="{{ route('admin.categories.index') }}" class="underline hover:no-underline">Create categories</a></li>
+            @endif
+            @if($setupHints['needs_products'])
+            <li><a href="{{ route('admin.products.create') }}" class="underline hover:no-underline">Add products</a></li>
+            @endif
+            @if($setupHints['needs_payment_methods'])
+            <li><a href="{{ route('admin.payment-methods.index') }}" class="underline hover:no-underline">Configure payment methods</a></li>
+            @endif
+        </ul>
+    </div>
+    @endif
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <x-admin.stat-card 
@@ -40,7 +58,7 @@
 
         <x-admin.stat-card 
             title="Total Revenue" 
-            value="${{ number_format($stats['revenue'], 2) }}" 
+            value="{{ \App\Support\Money::format($stats['revenue']) }}" 
             href="{{ route('admin.orders.index') }}"
             color="emerald">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -88,7 +106,7 @@
                                 {{ $order->user->name ?? 'Guest' }}
                             </td>
                             <td class="px-6 py-4 font-bold text-slate-800">
-                                ${{ number_format($order->total, 2) }}
+                                <x-money :amount="$order->total" />
                             </td>
                             <td class="px-6 py-4">
                                 <x-admin.status-badge :status="$order->status" />

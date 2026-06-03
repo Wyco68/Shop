@@ -7,7 +7,7 @@
     @if(auth()->check())
         <meta name="user-id" content="{{ auth()->id() }}">
     @endif
-    <title>CarPart - @yield('title', 'Home')</title>
+    <title>{{ config('shop.name') }} - @yield('title', 'Home')</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,8 +44,8 @@
 
     <footer class="bg-gray-900 text-gray-400 py-10 mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
-            <p class="font-semibold text-white mb-1">CarPart</p>
-            <p>&copy; {{ date('Y') }} CarPart. All rights reserved.</p>
+            <p class="font-semibold text-white mb-1">{{ config('shop.name') }}</p>
+            <p>&copy; {{ date('Y') }} {{ config('shop.name') }}. All rights reserved.</p>
         </div>
     </footer>
 

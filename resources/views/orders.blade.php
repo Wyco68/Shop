@@ -8,7 +8,7 @@
             <h1 class="text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>
             @php $allOrdersTotal = Auth::user()->orders()->sum('total'); @endphp
             @if($allOrdersTotal > 0)
-                <p class="text-sm text-gray-500 mt-2">Lifetime Total: <span class="font-bold text-gray-900">${{ number_format($allOrdersTotal, 2) }}</span></p>
+                <p class="text-sm text-gray-500 mt-2">Lifetime Total: <span class="font-bold text-gray-900"><x-money :amount="$allOrdersTotal" /></span></p>
             @endif
         </div>
         <a href="{{ route('products.index') }}"
@@ -57,7 +57,7 @@
                     <div class="flex items-center gap-4">
                         <div class="text-right">
                             <span class="text-xs text-gray-500 uppercase tracking-wider font-semibold block mb-0.5">Order Total</span>
-                            <span class="text-xl font-bold text-gray-900">${{ number_format($order->total, 2) }}</span>
+                            <span class="text-xl font-bold text-gray-900"><x-money :amount="$order->total" /></span>
                         </div>
                         <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full {{ $badge }}">
                             {{ ucwords($statusLabel) }}
@@ -71,7 +71,7 @@
                         @foreach($order->orderItems->take(3) as $item)
                         <div class="flex justify-between text-sm text-gray-600">
                             <span class="line-clamp-1">{{ $item->product_name_snapshot }} × {{ $item->quantity }}</span>
-                            <span>${{ number_format($item->final_price * $item->quantity, 2) }}</span>
+                            <span><x-money :amount="$item->final_price * $item->quantity" /></span>
                         </div>
                         @endforeach
                         @if($order->orderItems->count() > 3)

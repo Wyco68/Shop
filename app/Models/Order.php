@@ -27,10 +27,6 @@ class Order extends Model
     const STATUS_RETURN_REQUESTED = 'return_requested';
     const STATUS_RETURNED         = 'returned';
 
-    protected $attributes = [
-        'currency' => 'USD',
-    ];
-
     protected $fillable = [
         'user_id', 'payment_method_id', 'status', 'subtotal', 'discount_total', 'total', 'currency', 'notes',
     ];
@@ -42,6 +38,15 @@ class Order extends Model
             'discount_total' => 'decimal:2',
             'total' => 'decimal:2',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order): void {
+            if (empty($order->currency)) {
+                $order->currency = config('shop.currency', 'USD');
+            }
+        });
     }
 
     public function user()

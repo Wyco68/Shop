@@ -66,7 +66,7 @@
     @if($order->paymentMethod)
     <div class="bg-white rounded-xl border border-gray-100 p-6 mb-6">
         <h2 class="font-semibold text-gray-900 mb-3">Payment — {{ $order->paymentMethod->name }}</h2>
-        <p class="text-lg font-bold text-gray-900 mb-4">Amount: ${{ number_format($order->total, 2) }}</p>
+        <p class="text-lg font-bold text-gray-900 mb-4">Amount: <x-money :amount="$order->total" /></p>
 
         @if($order->paymentMethod->instructions)
         <div class="text-sm text-gray-700 whitespace-pre-line border-t border-gray-50 pt-4">{{ $order->paymentMethod->instructions }}</div>
@@ -90,13 +90,13 @@
                     <p class="font-medium text-gray-900">{{ $item->product_name_snapshot }}</p>
                     <p class="text-xs text-gray-400">{{ $item->sku_snapshot }} × {{ $item->quantity }}</p>
                 </div>
-                <span class="font-semibold">${{ number_format($item->final_price * $item->quantity, 2) }}</span>
+                <span class="font-semibold"><x-money :amount="$item->final_price * $item->quantity" /></span>
             </div>
             @endforeach
         </div>
         <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between font-bold text-gray-900">
             <span>Total</span>
-            <span>${{ number_format($order->total, 2) }}</span>
+            <span><x-money :amount="$order->total" /></span>
         </div>
     </div>
 

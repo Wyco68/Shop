@@ -1,11 +1,17 @@
-# Render Blueprint — SQLite demo + Upstash Redis + Pusher
-# Docs: docs/UPSTASH-PUSHER.md
+# Render Blueprint — production template (Pro web + worker + MySQL + Redis)
+# Docs: docs/DEPLOY-RENDER.md
+
+databases:
+  - name: ecommerce-mysql
+    plan: starter
+    databaseName: ecommerce
+    user: ecommerce
 
 services:
   - type: web
-    name: carpart
+    name: ecommerce-web
     runtime: docker
-    plan: free
+    plan: pro
     region: oregon
     healthCheckPath: /up
     dockerfilePath: ./Dockerfile
@@ -13,13 +19,17 @@ services:
     autoDeploy: true
     envVars:
       - key: APP_NAME
-        value: CarPart
+        value: E-Commerce
+      - key: STORE_NAME
+        value: E-Commerce
+      - key: CURRENCY
+        value: USD
+      - key: CURRENCY_SYMBOL
+        value: $
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
-      - key: APP_DEMO_MODE
-        value: "true"
       - key: APP_KEY
         sync: false
       - key: APP_URL
@@ -29,23 +39,41 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: DB_CONNECTION
-        value: sqlite
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: ecommerce-mysql
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ecommerce-mysql
+          property: port
       - key: DB_DATABASE
-        value: /var/www/html/database/database.sqlite
+        fromDatabase:
+          name: ecommerce-mysql
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ecommerce-mysql
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ecommerce-mysql
+          property: password
       - key: REDIS_CLIENT
         value: predis
       - key: REDIS_URL
         sync: false
       - key: SESSION_DRIVER
-        value: cookie
+        value: redis
       - key: CACHE_STORE
-        value: file
+        value: redis
+      - key: QUEUE_CONNECTION
+        value: redis
       - key: SESSION_SECURE_COOKIE
-        value: "false"
+        value: "true"
       - key: RENDER
         value: "true"
-      - key: QUEUE_CONNECTION
-        value: sync
       - key: BROADCAST_CONNECTION
         value: pusher
       - key: PUSHER_APP_ID
@@ -66,7 +94,70 @@ services:
         sync: false
       - key: VITE_PUSHER_SCHEME
         value: https
+      - key: VITE_APP_NAME
+        value: E-Commerce
       - key: FILESYSTEM_DISK
-        value: local
+        value: s3
+      - key: FILESYSTEM_PRODUCT_DISK
+        value: s3
+      - key: FILESYSTEM_PRIVATE_DISK
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_BUCKET
+        sync: false
       - key: MAIL_MAILER
         value: log
+
+  - type: worker
+    name: ecommerce-worker
+    runtime: docker
+    plan: pro
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: php artisan queue:work redis --sleep=1 --tries=3 --timeout=120
+    autoDeploy: true
+    envVars:
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: APP_KEY
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: DB_CONNECTION
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: DB_HOST
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: DB_PORT
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: DB_DATABASE
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: DB_USERNAME
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: DB_PASSWORD
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: REDIS_URL
+      - fromService:
+          name: ecommerce-web
+          type: web
+          envVarKey: QUEUE_CONNECTION
+      - key: APP_ENV
+        value: production

@@ -12,7 +12,10 @@ use App\Listeners\NotifyAdminRefundRequested;
 use App\Listeners\NotifyUserOrderStatusUpdated;
 use App\Listeners\NotifyUserRefundApproved;
 use App\Listeners\NotifyUserRefundRejected;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,6 +34,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('checkout', function (Request $request) {
+            return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
+        });
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
 
@@ -40,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Render TLS is terminated at the edge; Secure cookies + undetected HTTPS = no Set-Cookie → 419
-        if (config('app.demo_mode') || env('RENDER')) {
+        if (env('RENDER')) {
             config([
                 'session.secure' => false,
                 'session.same_site' => 'lax',

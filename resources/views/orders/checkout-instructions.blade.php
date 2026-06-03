@@ -29,7 +29,7 @@
                 @endif
 
                 <p class="mt-6 text-sm font-semibold text-gray-900">
-                    Amount due: <span class="text-lg">${{ number_format($summary['total'], 2) }}</span>
+                    Amount due: <span class="text-lg"><x-money :amount="$summary['total']" /></span>
                 </p>
             </div>
 
@@ -51,7 +51,7 @@
 
                 <button type="submit"
                     class="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-700 transition">
-                    Place Order — ${{ number_format($summary['total'], 2) }}
+                    Place Order — <x-money :amount="$summary['total']" />
                 </button>
 
                 <a href="{{ route('orders.create') }}" class="block text-center text-sm text-gray-400 hover:text-gray-600">

@@ -1,4 +1,8 @@
-# Deploy CarPart on Render
+# Deploy CarPart on Render (legacy demo doc)
+
+> **Superseded** for production templates. Use **[DEPLOY-RENDER.md](DEPLOY-RENDER.md)** (Pro, MySQL, Redis, no demo seed).
+
+# Deploy CarPart on Render (legacy)
 
 > **Portfolio-ready** — one free Web Service, SQLite demo data, **Pusher** realtime, and stable default session/cache without Redis.  
 > Optional Redis rollout: [UPSTASH-PUSHER.md](UPSTASH-PUSHER.md). Local dev: [Laravel Sail](../README.md).

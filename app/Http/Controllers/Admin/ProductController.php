@@ -9,7 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\Inventory;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Support\StoreCache;
 
 class ProductController extends Controller
 {
@@ -55,7 +55,7 @@ class ProductController extends Controller
 
         $data = $request->only('name', 'description', 'base_price', 'category_id');
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
+            $path = $request->file('image')->store('products', config('filesystems.product_disk', 'public'));
             $data['images'] = [$path];
         }
 
@@ -72,8 +72,8 @@ class ProductController extends Controller
             'stock_quantity' => $validated['initial_stock'],
         ]);
 
-        Cache::forget('home.featured');
-        Cache::forget('categories.active');
+        StoreCache::forgetProducts();
+        StoreCache::forgetCategories();
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
     }
@@ -103,13 +103,13 @@ class ProductController extends Controller
 
         $data = $request->only('name', 'description', 'base_price', 'category_id', 'is_active');
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
+            $path = $request->file('image')->store('products', config('filesystems.product_disk', 'public'));
             $data['images'] = [$path];
         }
 
         $product->update($data);
 
-        Cache::forget('home.featured');
+        StoreCache::forgetProducts();
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }
@@ -120,7 +120,7 @@ class ProductController extends Controller
 
         $product->delete(); // soft delete
 
-        Cache::forget('home.featured');
+        StoreCache::forgetProducts();
 
         return redirect()->route('admin.products.index')->with('success', 'Product archived.');
     }

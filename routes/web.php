@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\SetupController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
@@ -10,6 +11,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RefundController;
 use App\Http\Controllers\Admin;
 use Illuminate\Support\Facades\Route;
+
+// First-run admin setup (disabled once an admin exists)
+Route::middleware('no_admin_yet')->group(function () {
+    Route::get('/setup', [SetupController::class, 'create'])->name('setup.create');
+    Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
+});
 
 // Public routes
 Route::middleware('redirect_admin')->group(function () {
@@ -32,9 +39,9 @@ Route::middleware(['auth', 'redirect_admin'])->group(function () {
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders/checkout/method', [OrderController::class, 'selectPaymentMethod'])->name('orders.checkout.method');
     Route::get('/orders/checkout/instructions', [OrderController::class, 'showInstructions'])->name('orders.checkout.instructions');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::get('/orders/{order}/payment', [OrderController::class, 'payment'])->name('orders.payment');
-    Route::post('/orders/{order}/payment', [OrderController::class, 'submitPayment'])->name('orders.payment.submit');
+    Route::post('/orders/{order}/payment', [OrderController::class, 'submitPayment'])->middleware('throttle:checkout')->name('orders.payment.submit');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Profile
@@ -61,6 +68,8 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
 
     Route::resource('products', Admin\ProductController::class)->except(['show']);
     Route::resource('categories', Admin\CategoryController::class)->except(['show', 'create', 'edit']);
+
+    Route::resource('payment-methods', Admin\PaymentMethodController::class)->except(['show']);
 
     Route::get('orders', [Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');

@@ -151,7 +151,7 @@
                         <div class="p-5 flex-1 flex flex-col bg-white">
                             <div class="flex justify-between items-start mb-2 gap-4">
                                 <span class="text-xxs font-bold tracking-wider text-slate-400 uppercase truncate">{{ $product->category?->name ?? 'Uncategorized' }}</span>
-                                <span class="text-base font-extrabold tracking-tight text-slate-800 shrink-0">${{ number_format($product->base_price, 2) }}</span>
+                                <span class="text-base font-extrabold tracking-tight text-slate-800 shrink-0"><x-money :amount="$product->base_price" /></span>
                             </div>
                             <h3 class="font-bold text-slate-800 text-sm leading-snug group-hover:text-sky-500 transition-colors line-clamp-2 mb-4">
                                 {{ $product->name }}
