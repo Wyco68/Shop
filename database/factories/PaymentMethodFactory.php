@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\PaymentMethodType;
 use App\Models\PaymentMethod;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,6 +17,11 @@ class PaymentMethodFactory extends Factory
         return [
             'name' => fake()->words(3, true),
             'code' => $code,
+            'type' => PaymentMethodType::Bank,
+            'config' => [
+                'bank_name' => 'Test Bank',
+                'account_number' => '1234567890',
+            ],
             'instructions' => fake()->paragraph(),
             'qr_image_path' => null,
             'is_active' => true,

@@ -15,7 +15,7 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -27,7 +27,12 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'phone_num' => ['nullable', 'string', 'max:20'],
             'address'   => ['nullable', 'string', 'max:255'],
-            'password'  => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
+
+        if (! $this->user()->isAdmin()) {
+            $rules['password'] = ['nullable', 'string', 'min:8', 'confirmed'];
+        }
+
+        return $rules;
     }
 }

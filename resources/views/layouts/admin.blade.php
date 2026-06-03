@@ -8,7 +8,7 @@
         <meta name="user-id" content="{{ auth()->id() }}">
     @endif
     <title>Admin Panel - @yield('title', 'Dashboard')</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    <link rel="icon" href="{{ $storeFaviconUrl ?? asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
         
         <!-- Sidebar Brand -->
         <div class="h-16 px-6 border-b border-slate-800 flex items-center gap-3">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 w-auto filter brightness-0 invert" />
+            <img src="{{ $storeLogoUrl ?? asset('images/logo.png') }}" alt="{{ config('shop.name') }}" class="h-8 w-auto filter brightness-0 invert" />
             <div>
                 <span class="font-bold text-white tracking-wide text-lg">{{ config('shop.name') }}</span>
                 <span class="text-[10px] block text-sky-400 font-semibold tracking-wider uppercase -mt-1">Admin Console</span>
@@ -102,20 +102,33 @@
                         Categories
                     </a>
 
-                    <a href="{{ route('admin.payment-methods.index') }}" 
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.payment-methods.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.payment-methods.*') ? 'text-sky-400' : 'text-slate-400 group-hover:text-white transition-colors' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        Payment Methods
-                    </a>
-
                     <a href="{{ route('admin.users.index') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.users.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
                         <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.users.*') ? 'text-sky-400' : 'text-slate-400 group-hover:text-white transition-colors' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         Users
+                    </a>
+                </div>
+            </div>
+
+            <!-- Settings Group -->
+            <div>
+                <span class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Settings</span>
+                <div class="space-y-1">
+                    <a href="{{ route('admin.settings.branding.edit') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.settings.branding.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Branding
+                    </a>
+                    <a href="{{ route('admin.settings.payments.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.settings.payments.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Payments
                     </a>
                 </div>
             </div>

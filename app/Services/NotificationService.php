@@ -29,7 +29,7 @@ class NotificationService
         try {
             \App\Events\NotificationCreated::dispatch($notification);
         } catch (\Illuminate\Broadcasting\BroadcastException $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to broadcast notification: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Failed to broadcast notification: '.$e->getMessage());
         }
 
         return $notification;

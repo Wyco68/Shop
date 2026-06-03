@@ -12,6 +12,13 @@ class StoreCache
 
     public const HOME_FEATURED = 'home.featured';
 
+    public const SETTINGS = 'cache:settings';
+
+    public static function forgetSettings(): void
+    {
+        Cache::forget(self::SETTINGS);
+    }
+
     public static function forgetCategories(): void
     {
         Cache::forget(self::CATEGORIES_ACTIVE);

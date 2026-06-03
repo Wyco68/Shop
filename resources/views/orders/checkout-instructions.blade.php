@@ -18,7 +18,7 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-xl border border-gray-100 p-6">
                 <h2 class="font-semibold text-gray-900 mb-4">Payment Instructions</h2>
-                <div class="prose prose-sm max-w-none text-gray-700 whitespace-pre-line">{{ $paymentMethod->instructions }}</div>
+                <div class="prose prose-sm max-w-none text-gray-700 whitespace-pre-line">{{ $paymentMethod->displayInstructions() }}</div>
 
                 @if($paymentMethod->qrImageUrl())
                 <div class="mt-6 flex flex-col items-center">

@@ -28,7 +28,7 @@
             <a href="{{ route('products.index', ['category' => $category->id]) }}"
                class="flex flex-col items-center p-6 bg-white rounded-3xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100/50 group">
                 <div class="w-16 h-16 bg-[#f5f5f7] group-hover:bg-black group-hover:scale-110 rounded-full flex items-center justify-center mb-4 transition-all duration-300">
-                    <x-category-icon :name="$category->name" class="w-8 h-8 text-gray-600 group-hover:text-white transition-colors duration-300" />
+                    <x-category-icon :name="$category->name" :icon-url="$category->iconUrl()" class="w-8 h-8 text-gray-600 group-hover:text-white transition-colors duration-300" />
                 </div>
                 <span class="text-sm font-medium text-gray-700 text-center">{{ $category->name }}</span>
             </a>

@@ -90,6 +90,12 @@
         </form>
     </div>
 
+    @if($user->isAdmin())
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 text-sm text-amber-900">
+        <p class="font-semibold mb-1">Administrator account</p>
+        <p>Password changes are CLI-only for security: <code class="bg-amber-100 px-1 rounded text-xs">php artisan admin:change-password</code></p>
+    </div>
+    @else
     {{-- Change Password --}}
     <div class="bg-white rounded-xl border border-gray-100 p-6 mb-6">
         <h2 class="text-base font-semibold text-gray-900 mb-5">Change Password</h2>
@@ -118,6 +124,7 @@
             </button>
         </form>
     </div>
+    @endif
 
     {{-- Danger Zone --}}
     <div class="bg-white rounded-xl border border-red-100 p-6" x-data="{ open: false }">

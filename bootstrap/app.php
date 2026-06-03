@@ -23,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prepend(\App\Http\Middleware\TrustForwardedProto::class);
 
+        $middleware->redirectGuestsTo(fn () => route('login'));
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            return $request->user()?->homeUrl() ?? route('home');
+        });
+
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
             'redirect_admin' => \App\Http\Middleware\RedirectAdmin::class,

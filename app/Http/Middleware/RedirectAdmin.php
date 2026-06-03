@@ -16,10 +16,28 @@ class RedirectAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            return redirect()->route('admin.dashboard');
+        if (! Auth::check() || ! Auth::user()->isAdmin()) {
+            return $next($request);
         }
 
-        return $next($request);
+        if ($this->allowsAdminNotificationApi($request)) {
+            return $next($request);
+        }
+
+        if ($request->routeIs('notifications.index') && ! $request->expectsJson()) {
+            return redirect()->route('admin.notifications.index');
+        }
+
+        return redirect()->route('admin.dashboard');
+    }
+
+    private function allowsAdminNotificationApi(Request $request): bool
+    {
+        if (! $request->is('notifications*')) {
+            return false;
+        }
+
+        return $request->expectsJson()
+            || in_array($request->method(), ['PATCH', 'POST', 'PUT'], true);
     }
 }

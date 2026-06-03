@@ -37,11 +37,18 @@
     </div>
 
     <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">QR image (optional)</label>
-        <input type="file" name="qr_image" accept="image/*" class="text-sm text-slate-600">
-        @if(!empty($paymentMethod?->qr_image_path))
-            <p class="text-xs text-slate-500 mt-2">Current: <a href="{{ $paymentMethod->qrImageUrl() }}" target="_blank" class="text-sky-600 underline">view</a></p>
-        @endif
-        @error('qr_image')<p class=" text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">QR code image (optional)</label>
+        <x-admin.media-upload
+            name="qr_image"
+            id="payment_method_qr"
+            :preview="!empty($paymentMethod?->qr_image_path) ? $paymentMethod->qrImageUrl() : ''"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            placeholder="Upload QR code"
+            :button="!empty($paymentMethod) ? 'Update QR image' : 'Choose QR image'"
+            :hint="!empty($paymentMethod) ? 'Leave empty to keep current image' : 'Shown to customers at checkout'"
+            height="h-40"
+            object-class="object-contain"
+            preview-rounded="rounded-lg"
+        />
     </div>
 </div>

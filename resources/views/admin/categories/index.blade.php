@@ -31,6 +31,7 @@
                 <x-admin.data-table class="w-full">
                     <thead>
                         <tr class="bg-slate-50/50 border-b border-slate-100">
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">Icon</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">Category Name</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
                             <th class="px-6 py-4"></th>
@@ -39,7 +40,11 @@
                     <tbody class="divide-y divide-slate-100 text-sm">
                         @forelse($categories as $category)
                             <tr class="hover:bg-slate-50/50 transition">
-                                <!-- Category Name -->
+                                <td class="px-6 py-4">
+                                    <div class="w-10 h-10 rounded-full overflow-hidden bg-slate-100">
+                                        <x-category-icon :name="$category->name" :icon-url="$category->iconUrl()" class="w-10 h-10" />
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 font-bold text-slate-800">
                                     {{ $category->name }}
                                 </td>
@@ -72,7 +77,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-6 py-12 text-center text-slate-400 font-medium bg-slate-50/20">
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium bg-slate-50/20">
                                     <div class="flex flex-col items-center justify-center gap-2">
                                         <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -96,12 +101,27 @@
             
             <div class="sticky top-24">
                 <x-admin.card title="{{ $isEdit ? 'Edit Category' : 'Create Category' }}">
-                    <form action="{{ $isEdit ? route('admin.categories.update', $editCategory) : route('admin.categories.store') }}" method="POST" class="space-y-6">
+                    <form action="{{ $isEdit ? route('admin.categories.update', $editCategory) : route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @csrf
                         @if($isEdit)
                             @method('PUT')
                         @endif
                         
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category icon</label>
+                            <x-admin.media-upload
+                                name="icon"
+                                id="category_icon"
+                                :preview="$isEdit && $editCategory?->iconUrl() ? $editCategory->iconUrl() : ''"
+                                accept="image/png,image/jpeg,image/webp,image/gif"
+                                placeholder="Upload category icon"
+                                :button="$isEdit ? 'Update icon' : 'Choose icon'"
+                                hint="PNG, JPG, WebP, or GIF · max 512KB"
+                                height="h-36"
+                                preview-rounded="rounded-full"
+                            />
+                        </div>
+
                         <!-- Name input -->
                         <div>
                             <label for="name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category Name</label>

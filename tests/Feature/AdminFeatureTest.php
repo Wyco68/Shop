@@ -64,6 +64,8 @@ class AdminFeatureTest extends TestCase
         $this->actingAs($admin)->get('/cart')->assertRedirect(route('admin.dashboard'));
         $this->actingAs($admin)->get('/orders/create')->assertRedirect(route('admin.dashboard'));
         $this->actingAs($admin)->get('/products')->assertRedirect(route('admin.dashboard'));
+        $this->actingAs($admin)->get('/profile')->assertRedirect(route('admin.dashboard'));
+        $this->actingAs($admin)->get('/notifications')->assertRedirect(route('admin.notifications.index'));
     }
 
     // 2. Orders Management

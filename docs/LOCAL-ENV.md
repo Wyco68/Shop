@@ -310,6 +310,29 @@ Run `php artisan serve`, `php artisan queue:work redis`, and ensure MySQL/Redis 
 
 ---
 
+## Administrator passwords (CLI only)
+
+Admins cannot change passwords in the profile UI or via API.
+
+```bash
+./vendor/bin/sail artisan admin:change-password
+```
+
+Optional one-time env reset (set vars, run once, then disable):
+
+```env
+ADMIN_RESET_PASSWORD=true
+ADMIN_RESET_EMAIL=your-admin@example.com
+ADMIN_RESET_PASSWORD_NEW=YourNewSecurePass1!
+```
+
+```bash
+./vendor/bin/sail artisan admin:env-password-reset
+# Then set ADMIN_RESET_PASSWORD=false
+```
+
+---
+
 ## Related docs
 
 - [README.md](../README.md) — quick start

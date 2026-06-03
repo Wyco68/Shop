@@ -34,6 +34,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === UserRole::Admin->value;
     }
 
+    /**
+     * Default post-authentication URL for this user (storefront vs admin).
+     */
+    public function homeUrl(): string
+    {
+        return $this->isAdmin()
+            ? route('admin.dashboard', absolute: false)
+            : route('home', absolute: false);
+    }
+
     public static function hasAdmin(): bool
     {
         return static::query()->where('role', UserRole::Admin->value)->exists();

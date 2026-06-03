@@ -44,17 +44,16 @@ Route::middleware(['auth', 'redirect_admin'])->group(function () {
     Route::post('/orders/{order}/payment', [OrderController::class, 'submitPayment'])->middleware('throttle:checkout')->name('orders.payment.submit');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     // Refund requests (user-facing)
     Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
 });
 
-Route::middleware(['auth'])->group(function () {
-    // Notifications (Shared between admin and user)
+Route::middleware(['auth', 'redirect_admin'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Notifications: admins use JSON/PATCH for the admin panel; HTML index redirects to /admin/notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
@@ -69,7 +68,17 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     Route::resource('products', Admin\ProductController::class)->except(['show']);
     Route::resource('categories', Admin\CategoryController::class)->except(['show', 'create', 'edit']);
 
-    Route::resource('payment-methods', Admin\PaymentMethodController::class)->except(['show']);
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('branding', [Admin\BrandingSettingsController::class, 'edit'])->name('branding.edit');
+        Route::put('branding', [Admin\BrandingSettingsController::class, 'update'])->name('branding.update');
+
+        Route::get('payments', [Admin\PaymentSettingsController::class, 'index'])->name('payments.index');
+        Route::post('payments', [Admin\PaymentSettingsController::class, 'store'])->name('payments.store');
+        Route::put('payments/{paymentMethod}', [Admin\PaymentSettingsController::class, 'update'])->name('payments.update');
+        Route::delete('payments/{paymentMethod}', [Admin\PaymentSettingsController::class, 'destroy'])->name('payments.destroy');
+    });
+
+    Route::redirect('payment-methods', '/admin/settings/payments')->name('payment-methods.index');
 
     Route::get('orders', [Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
@@ -95,7 +104,7 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
 
 // Dashboard redirect for Breeze compatibility
 Route::get('/dashboard', function () {
-    return redirect()->route('home');
+    return redirect(auth()->user()->homeUrl());
 })->middleware('auth')->name('dashboard');
 
 require __DIR__.'/auth.php';

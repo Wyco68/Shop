@@ -55,6 +55,15 @@ Sail runs **php artisan serve** and a **queue worker** via supervisord.
 - Strong password required (12+ chars, mixed case, numbers, symbols).
 - No demo users or catalog seed data.
 - Public registration always creates `user` role only.
+- **Admin password changes are CLI-only:** `php artisan admin:change-password` (no admin account UI).
+
+## Admin customization
+
+| Area | Route |
+|------|--------|
+| Favicon & logo | `/admin/settings/branding` |
+| Payment methods | `/admin/settings/payments` |
+| Category icons | `/admin/categories` (upload on create/edit) |
 
 ## Environment variables
 

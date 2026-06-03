@@ -12,7 +12,9 @@ use App\Listeners\NotifyAdminRefundRequested;
 use App\Listeners\NotifyUserOrderStatusUpdated;
 use App\Listeners\NotifyUserRefundApproved;
 use App\Listeners\NotifyUserRefundRejected;
+use App\Services\StoreSettingsService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -57,5 +59,13 @@ class AppServiceProvider extends ServiceProvider
                 'session.same_site' => 'lax',
             ]);
         }
+
+        View::composer(['layouts.app', 'layouts.admin', 'layouts.navigation', 'layouts.guest'], function ($view) {
+            $settings = app(StoreSettingsService::class);
+            $view->with([
+                'storeFaviconUrl' => $settings->faviconUrl(),
+                'storeLogoUrl' => $settings->logoUrl(),
+            ]);
+        });
     }
 }

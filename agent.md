@@ -17,6 +17,14 @@
 
 - First admin only: `php artisan app:init-admin` or `/setup` (middleware `no_admin_yet`).
 - Never add `role` to `User::$fillable` or accept `role` from HTTP input on registration.
+- **Never** add `/admin/account`, admin password forms, or password-reset APIs for admins.
+- Admin password change: `php artisan admin:change-password` only; optional `php artisan admin:env-password-reset` when `ADMIN_RESET_PASSWORD=true`.
+
+## Admin customization routes
+
+- `/admin/settings/branding` — favicon + logo
+- `/admin/settings/payments` — payment methods (not separate account UI)
+- `/admin/categories` — category icon uploads
 
 ## Infrastructure
 

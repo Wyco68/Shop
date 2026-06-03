@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -28,14 +27,18 @@ class AdminBootstrapService
 
         $name = $data['name'] ?? strstr($data['email'], '@', true) ?: 'Administrator';
 
-        return User::query()->create([
+        $user = User::query()->create([
             'name' => $name,
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => UserRole::Admin->value,
+            'password' => $data['password'],
             'is_active' => true,
             'email_verified_at' => now(),
         ]);
+
+        // Role is not mass-assignable; set explicitly for bootstrap only.
+        $user->forceFill(['role' => UserRole::Admin->value])->save();
+
+        return $user->refresh();
     }
 
     public static function passwordRules(): array

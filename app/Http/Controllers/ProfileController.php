@@ -30,8 +30,12 @@ class ProfileController extends Controller
     {
         $validated = $request->validated();
 
-        // Handle optional password update
-        if (!empty($validated['password'])) {
+        if ($request->user()->isAdmin() && $request->filled('password')) {
+            return Redirect::route('profile.edit')
+                ->with('error', 'Administrator passwords can only be changed via: php artisan admin:change-password');
+        }
+
+        if (! empty($validated['password'] ?? null)) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);

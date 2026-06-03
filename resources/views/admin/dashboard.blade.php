@@ -28,7 +28,7 @@
             <li><a href="{{ route('admin.products.create') }}" class="underline hover:no-underline">Add products</a></li>
             @endif
             @if($setupHints['needs_payment_methods'])
-            <li><a href="{{ route('admin.payment-methods.index') }}" class="underline hover:no-underline">Configure payment methods</a></li>
+            <li><a href="{{ route('admin.settings.payments.index') }}" class="underline hover:no-underline">Configure payment methods</a></li>
             @endif
         </ul>
     </div>

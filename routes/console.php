@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\AdminBootstrapService;
+use App\Services\AdminPasswordService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Validator;
@@ -73,3 +74,92 @@ Artisan::command('app:init-admin', function (AdminBootstrapService $bootstrap) {
 
     return self::SUCCESS;
 })->purpose('Create the first administrator account (one-time only)');
+
+Artisan::command('admin:change-password', function (AdminPasswordService $passwords) {
+    $email = text(
+        label: 'Admin email',
+        required: true,
+        validate: fn (string $value) => filter_var($value, FILTER_VALIDATE_EMAIL)
+            ? null
+            : 'Enter a valid email address.',
+    );
+
+    $plainPassword = password(
+        label: 'New password',
+        required: true,
+    );
+
+    $confirm = password(
+        label: 'Confirm new password',
+        required: true,
+    );
+
+    if ($plainPassword !== $confirm) {
+        error('Passwords do not match.');
+
+        return self::FAILURE;
+    }
+
+    $validator = Validator::make(
+        ['password' => $plainPassword, 'password_confirmation' => $confirm],
+        ['password' => AdminBootstrapService::passwordRules()],
+    );
+
+    if ($validator->fails()) {
+        error($validator->errors()->first('password'));
+
+        return self::FAILURE;
+    }
+
+    try {
+        $admin = $passwords->changePassword($email, $plainPassword, 'cli');
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        error($e->getMessage());
+
+        return self::FAILURE;
+    }
+
+    info("Password updated for {$admin->email}.");
+
+    return self::SUCCESS;
+})->purpose('Change an administrator password (CLI only)');
+
+Artisan::command('admin:env-password-reset', function (AdminPasswordService $passwords) {
+    if (! filter_var(env('ADMIN_RESET_PASSWORD', false), FILTER_VALIDATE_BOOLEAN)) {
+        error('ADMIN_RESET_PASSWORD is not enabled.');
+
+        return self::FAILURE;
+    }
+
+    $email = env('ADMIN_RESET_EMAIL');
+    $newPassword = env('ADMIN_RESET_PASSWORD_NEW');
+
+    if (! $email || ! $newPassword) {
+        error('Set ADMIN_RESET_EMAIL and ADMIN_RESET_PASSWORD_NEW in the environment.');
+
+        return self::FAILURE;
+    }
+
+    $validator = Validator::make(
+        ['password' => $newPassword, 'password_confirmation' => $newPassword],
+        ['password' => AdminBootstrapService::passwordRules()],
+    );
+
+    if ($validator->fails()) {
+        error($validator->errors()->first('password'));
+
+        return self::FAILURE;
+    }
+
+    try {
+        $admin = $passwords->changePassword($email, $newPassword, 'env_reset');
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        error($e->getMessage());
+
+        return self::FAILURE;
+    }
+
+    info("Password reset for {$admin->email}. Set ADMIN_RESET_PASSWORD=false immediately.");
+
+    return self::SUCCESS;
+})->purpose('One-time admin password reset when ADMIN_RESET_PASSWORD=true');

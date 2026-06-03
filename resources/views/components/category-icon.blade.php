@@ -1,5 +1,8 @@
-@props(['name'])
+@props(['name', 'iconUrl' => null])
 
+@if($iconUrl)
+    <img src="{{ $iconUrl }}" alt="" {{ $attributes->merge(['class' => 'w-full h-full object-cover rounded-full']) }} loading="lazy">
+@else
 @php
     $label = trim((string) $name);
     $initials = collect(explode(' ', $label))
@@ -17,3 +20,4 @@
      style="background-color: hsl({{ $hue }}, 55%, 92%); color: hsl({{ $hue }}, 45%, 35%);">
     {{ $initials }}
 </div>
+@endif
