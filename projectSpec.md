@@ -52,6 +52,7 @@
 
 - Private channel `user.{id}` for notifications.
 - Persisted in DB; Alpine + sessionStorage on client.
+- Read notifications are deleted after 10 days (`notifications:prune-read`, scheduled daily).
 
 # Security
 

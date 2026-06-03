@@ -4,6 +4,7 @@ use App\Services\AdminBootstrapService;
 use App\Services\AdminPasswordService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
@@ -133,3 +134,5 @@ Artisan::command('admin:change-password', function (AdminPasswordService $passwo
 
     return self::SUCCESS;
 })->purpose('Change an administrator password (CLI only)');
+
+Schedule::command('notifications:prune-read')->daily();
