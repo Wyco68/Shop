@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class StoreSetting extends Model
 {
     protected $fillable = [
+        'store_name',
         'favicon_path',
         'logo_path',
     ];

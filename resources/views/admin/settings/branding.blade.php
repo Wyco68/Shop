@@ -6,13 +6,15 @@
 <div class="max-w-3xl mx-auto space-y-8" x-data="{ faviconPreview: null, logoPreview: null }">
     <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
         <h1 class="text-2xl font-bold text-slate-800">Store branding</h1>
-        <p class="text-sm text-slate-500 mt-1">Upload favicon and logo shown across the storefront and admin.</p>
+        <p class="text-sm text-slate-500 mt-1">Upload favicon and logo</p>
     </div>
 
     <x-admin.card title="Assets">
         <form action="{{ route('admin.settings.branding.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
             @csrf
             @method('PUT')
+
+            <p class="text-sm text-slate-600">Current shop name: <strong>{{ config('shop.name') }}</strong></p>
 
             <div class="grid sm:grid-cols-2 gap-8">
                 <div>

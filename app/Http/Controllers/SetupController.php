@@ -21,6 +21,7 @@ class SetupController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'store_name' => ['required', 'string', 'max:255'],
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => AdminBootstrapService::passwordRules(),

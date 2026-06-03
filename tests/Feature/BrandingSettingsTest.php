@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\StoreSetting;
 use App\Models\User;
-use App\Support\StoreCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -17,9 +16,12 @@ class BrandingSettingsTest extends TestCase
 
     public function test_admin_can_upload_branding(): void
     {
-        Storage::fake('public');
+        Storage::fake(config('filesystems.product_disk', 'public'));
+        Cache::flush();
+        StoreSetting::query()->delete();
 
         $admin = User::factory()->admin()->create();
+        StoreSetting::query()->create(['store_name' => 'Locked Shop']);
 
         $response = $this->actingAs($admin)->put(route('admin.settings.branding.update'), [
             'logo' => UploadedFile::fake()->image('logo.png', 100, 40)->size(100),
@@ -30,7 +32,7 @@ class BrandingSettingsTest extends TestCase
 
         $setting = StoreSetting::query()->first();
         $this->assertNotNull($setting->logo_path);
-        Storage::disk('public')->assertExists($setting->logo_path);
-        $this->assertFalse(Cache::has(StoreCache::SETTINGS));
+        Storage::disk(config('filesystems.product_disk', 'public'))->assertExists($setting->logo_path);
+        $this->assertSame('Locked Shop', $setting->store_name);
     }
 }

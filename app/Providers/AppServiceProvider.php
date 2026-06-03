@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -58,6 +59,10 @@ class AppServiceProvider extends ServiceProvider
                 'session.secure' => false,
                 'session.same_site' => 'lax',
             ]);
+        }
+
+        if (Schema::hasTable('store_settings')) {
+            config(['shop.name' => app(StoreSettingsService::class)->displayName()]);
         }
 
         View::composer(['layouts.app', 'layouts.admin', 'layouts.navigation', 'layouts.guest'], function ($view) {

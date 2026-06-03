@@ -69,9 +69,11 @@ class BrandingSettingsController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
-        if ($updates !== []) {
-            $this->settings->updateBranding($updates);
+        if ($updates === []) {
+            return back()->with('error', 'No branding changes to save.');
         }
+
+        $this->settings->updateBranding($updates);
 
         return redirect()
             ->route('admin.settings.branding.edit')

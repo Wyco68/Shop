@@ -29,8 +29,17 @@ Artisan::command('app:init-admin', function (AdminBootstrapService $bootstrap) {
             : 'Enter a valid email address.',
     );
 
+    $storeName = text(
+        label: 'Shop name',
+        default: (string) config('shop.name'),
+        required: true,
+        validate: fn (string $value) => trim($value) !== ''
+            ? null
+            : 'Shop name is required.',
+    );
+
     $name = text(
-        label: 'Display name (optional)',
+        label: 'Administrator display name (optional)',
         default: strstr($email, '@', true) ?: 'Administrator',
     );
 
@@ -65,6 +74,7 @@ Artisan::command('app:init-admin', function (AdminBootstrapService $bootstrap) {
     }
 
     $user = $bootstrap->createAdmin([
+        'store_name' => trim($storeName),
         'name' => $name,
         'email' => $email,
         'password' => $plainPassword,

@@ -15,7 +15,7 @@ class AdminBootstrapService
     }
 
     /**
-     * @param  array{name?: string, email: string, password: string}  $data
+     * @param  array{name?: string, store_name: string, email: string, password: string}  $data
      */
     public function createAdmin(array $data): User
     {
@@ -26,6 +26,8 @@ class AdminBootstrapService
         }
 
         $name = $data['name'] ?? strstr($data['email'], '@', true) ?: 'Administrator';
+
+        app(StoreSettingsService::class)->initializeStoreName($data['store_name']);
 
         $user = User::query()->create([
             'name' => $name,

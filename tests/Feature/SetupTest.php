@@ -21,6 +21,7 @@ class SetupTest extends TestCase
 
         $this->get('/setup')->assertNotFound();
         $this->post('/setup', [
+            'store_name' => 'Another Shop',
             'email' => 'new@example.com',
             'password' => 'SecurePass1!Word',
             'password_confirmation' => 'SecurePass1!Word',
@@ -30,6 +31,7 @@ class SetupTest extends TestCase
     public function test_setup_creates_admin(): void
     {
         $response = $this->post('/setup', [
+            'store_name' => 'My Store',
             'name' => 'Admin',
             'email' => 'admin@store.test',
             'password' => 'SecurePass1!Word',

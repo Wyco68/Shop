@@ -55,8 +55,8 @@ npm ci && npm run build
 
 ## Admin Setup
 
-- Run: `./vendor/bin/sail artisan app:init-admin`
-- Or visit `/setup` once before any admin exists (404 after first admin).
+- Run: `./vendor/bin/sail artisan app:init-admin` (prompts for shop name)
+- Or visit `/setup` once before any admin exists (shop name + admin; 404 after first admin).
 - Password: 12+ chars with mixed case, numbers, and symbols.
 - No demo users or catalog seed data.
 - Add **payment methods** in admin before checkout works.

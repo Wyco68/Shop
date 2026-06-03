@@ -16,6 +16,7 @@ class InitAdminTest extends TestCase
     public function test_creates_first_admin_via_service(): void
     {
         $admin = app(AdminBootstrapService::class)->createAdmin([
+            'store_name' => 'Store Owner Shop',
             'name' => 'Store Owner',
             'email' => 'owner@example.com',
             'password' => 'SecurePass1!Word',
@@ -35,6 +36,7 @@ class InitAdminTest extends TestCase
         $this->expectException(ValidationException::class);
 
         app(AdminBootstrapService::class)->createAdmin([
+            'store_name' => 'Other Shop',
             'email' => 'other@example.com',
             'password' => 'SecurePass1!Word',
         ]);

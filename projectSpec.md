@@ -28,7 +28,8 @@
 ## Admin
 
 - Dashboard, products, categories, orders, payments, refunds, users, payment methods.
-- Branding: `/admin/settings/branding`
+- Shop name: set once at `/setup` or `app:init-admin` (not editable in admin)
+- Branding: `/admin/settings/branding` (favicon, logo)
 - Payment methods: `/admin/settings/payments`
 - Category icons: `/admin/categories`
 - Empty-state hints until catalog and payment methods exist.

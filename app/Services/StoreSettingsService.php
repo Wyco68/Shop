@@ -11,13 +11,48 @@ class StoreSettingsService
     public function get(): StoreSetting
     {
         return Cache::remember(StoreCache::SETTINGS, 3600, function () {
-            return StoreSetting::query()->firstOrCreate(['id' => 1]);
+            return StoreSetting::query()->first()
+                ?? StoreSetting::query()->create();
         });
+    }
+
+    public function displayName(): string
+    {
+        $custom = $this->get()->store_name;
+
+        if (filled($custom)) {
+            return $custom;
+        }
+
+        return (string) config('shop.name');
+    }
+
+    /**
+     * Set the shop name once during first-run bootstrap (setup / init-admin).
+     */
+    public function initializeStoreName(string $storeName): StoreSetting
+    {
+        if (StoreSetting::query()->whereNotNull('store_name')->where('store_name', '!=', '')->exists()) {
+            throw new \RuntimeException('Store name is already set and cannot be changed via bootstrap.');
+        }
+
+        StoreSetting::query()->delete();
+
+        $setting = StoreSetting::query()->create([
+            'store_name' => trim($storeName),
+        ]);
+
+        StoreCache::forgetSettings();
+        config(['shop.name' => $setting->store_name]);
+
+        return $setting;
     }
 
     public function updateBranding(array $attributes): StoreSetting
     {
-        $setting = StoreSetting::query()->firstOrCreate(['id' => 1]);
+        unset($attributes['store_name']);
+
+        $setting = $this->get();
         $setting->fill($attributes);
         $setting->save();
 
