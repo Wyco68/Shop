@@ -55,4 +55,13 @@ class Discount extends Model
     {
         return $query->where('category_id', $categoryId);
     }
+
+    public function badgeLabel(): string
+    {
+        if ($this->type === 'percentage') {
+            return $this->value.'% OFF';
+        }
+
+        return format_currency($this->value).' OFF';
+    }
 }

@@ -20,4 +20,6 @@ return [
 
     'currency_symbol' => env('CURRENCY_SYMBOL', '$'),
 
+    'currency_position' => env('CURRENCY_POSITION', 'before'),
+
 ];

@@ -5,7 +5,7 @@
 @foreach($products as $product)
     <div>
         <a href="{{ route('products.show', $product) }}">{{ $product->name }}</a>
-        <span>${{ $product->base_price }}</span>
+        <span><x-money :amount="$product->base_price" /></span>
         <span>{{ $product->category->name }}</span>
     </div>
 @endforeach

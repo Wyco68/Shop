@@ -22,6 +22,9 @@ class SetupTest extends TestCase
         $this->get('/setup')->assertNotFound();
         $this->post('/setup', [
             'store_name' => 'Another Shop',
+            'currency_code' => 'USD',
+            'currency_symbol' => '$',
+            'currency_position' => 'before',
             'email' => 'new@example.com',
             'password' => 'SecurePass1!Word',
             'password_confirmation' => 'SecurePass1!Word',
@@ -32,6 +35,9 @@ class SetupTest extends TestCase
     {
         $response = $this->post('/setup', [
             'store_name' => 'My Store',
+            'currency_code' => 'USD',
+            'currency_symbol' => '$',
+            'currency_position' => 'before',
             'name' => 'Admin',
             'email' => 'admin@store.test',
             'password' => 'SecurePass1!Word',

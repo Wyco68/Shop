@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CurrencyPosition;
 use App\Services\AdminBootstrapService;
 use App\Services\AdminPasswordService;
 use Illuminate\Foundation\Inspiring;
@@ -39,6 +40,30 @@ Artisan::command('app:init-admin', function (AdminBootstrapService $bootstrap) {
             : 'Shop name is required.',
     );
 
+    $currencyCode = text(
+        label: 'Currency code (ISO 4217)',
+        default: (string) config('shop.currency', 'USD'),
+        required: true,
+        validate: fn (string $value) => preg_match('/^[A-Za-z]{3}$/', $value)
+            ? null
+            : 'Enter a 3-letter currency code.',
+    );
+
+    $currencySymbol = text(
+        label: 'Currency symbol',
+        default: (string) config('shop.currency_symbol', '$'),
+        required: true,
+    );
+
+    $currencyPosition = select(
+        label: 'Symbol position',
+        options: [
+            CurrencyPosition::Before->value => 'Before amount',
+            CurrencyPosition::After->value => 'After amount',
+        ],
+        default: (string) config('shop.currency_position', 'before'),
+    );
+
     $name = text(
         label: 'Administrator display name (optional)',
         default: strstr($email, '@', true) ?: 'Administrator',
@@ -76,6 +101,9 @@ Artisan::command('app:init-admin', function (AdminBootstrapService $bootstrap) {
 
     $user = $bootstrap->createAdmin([
         'store_name' => trim($storeName),
+        'currency_code' => strtoupper($currencyCode),
+        'currency_symbol' => $currencySymbol,
+        'currency_position' => $currencyPosition,
         'name' => $name,
         'email' => $email,
         'password' => $plainPassword,

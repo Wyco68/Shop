@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\CurrencyPosition;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Validation\Rules\Password;
@@ -15,7 +16,7 @@ class AdminBootstrapService
     }
 
     /**
-     * @param  array{name?: string, store_name: string, email: string, password: string}  $data
+     * @param  array{name?: string, store_name: string, currency_code: string, currency_symbol: string, currency_position: string, email: string, password: string}  $data
      */
     public function createAdmin(array $data): User
     {
@@ -27,7 +28,12 @@ class AdminBootstrapService
 
         $name = $data['name'] ?? strstr($data['email'], '@', true) ?: 'Administrator';
 
-        app(StoreSettingsService::class)->initializeStoreName($data['store_name']);
+        app(StoreSettingsService::class)->initializeAtSetup(
+            $data['store_name'],
+            $data['currency_code'],
+            $data['currency_symbol'],
+            CurrencyPosition::from($data['currency_position']),
+        );
 
         $user = User::query()->create([
             'name' => $name,

@@ -23,7 +23,7 @@ class PaymentService
             'provider' => $provider,
             'status'   => Payment::STATUS_PENDING,
             'amount'   => $order->total,
-            'currency' => $order->currency ?? config('shop.currency', 'USD'),
+            'currency' => $order->currency ?? \App\Support\Money::currency(),
         ]);
     }
 

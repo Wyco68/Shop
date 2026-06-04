@@ -105,8 +105,9 @@ Then continue with `./vendor/bin/sail up -d`. After Sail is up, prefer `./vendor
 
 ## Admin Setup
 
-- Run: `./vendor/bin/sail artisan app:init-admin` (prompts for shop name)
-- Or visit `/setup` once before any admin exists (shop name + admin; 404 after first admin).
+- Run: `./vendor/bin/sail artisan app:init-admin` (prompts for shop name and base currency)
+- Or visit `/setup` once before any admin exists (store name, **base currency** (ISO code, symbol, position), and admin; 404 after first admin).
+- **Currency is set once** during setup (or `app:init-admin`), then `currency_locked` prevents changes via admin/API. Emergency override: `./vendor/bin/sail artisan currency:force-change` (interactive confirmation, logged).
 - Password: 12+ chars with mixed case, numbers, and symbols.
 - No demo users or catalog seed data.
 - Add **payment methods** in admin before checkout works.

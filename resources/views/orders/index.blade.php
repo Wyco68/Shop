@@ -3,6 +3,6 @@
 @section('content')
 <h1>My Orders</h1>
 @foreach($orders as $order)
-    <div>Order #{{ $order->id }} - ${{ $order->total }} - {{ $order->status }}</div>
+    <div>Order #{{ $order->id }} - <x-money :amount="$order->total" /> - {{ $order->status }}</div>
 @endforeach
 @endsection

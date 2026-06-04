@@ -88,7 +88,7 @@ class OrderService
                 'subtotal'          => $summary['subtotal'],
                 'discount_total'    => $summary['discount_total'],
                 'total'             => $summary['total'],
-                'currency'          => config('shop.currency', 'USD'),
+                'currency'          => \App\Support\Money::currency(),
                 'notes'             => $notes,
             ]);
 

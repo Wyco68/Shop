@@ -50,8 +50,14 @@
             </form>
         </div>
 
-        <div class="lg:col-span-1">
+        <div class="lg:col-span-1 space-y-6">
             @include('orders.partials.summary-sidebar')
+            @if(isset($supportContacts) && $supportContacts->isNotEmpty())
+                <div class="bg-white rounded-xl border border-gray-100 p-5">
+                    <h2 class="text-sm font-semibold text-gray-900 mb-3">Need help?</h2>
+                    <x-support-contacts :contacts="$supportContacts" compact />
+                </div>
+            @endif
         </div>
     </div>
 

@@ -43,9 +43,16 @@
     </main>
 
     <footer class="bg-gray-900 text-gray-400 py-10 mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm space-y-4">
             <p class="font-semibold text-white mb-1">{{ config('shop.name') }}</p>
-            <p>&copy; {{ date('Y') }} {{ config('shop.name') }}. All rights reserved.</p>
+            @if(isset($supportContacts) && $supportContacts->isNotEmpty())
+                <x-support-contacts :contacts="$supportContacts" compact class="mb-2" />
+            @endif
+            <p>
+                <a href="{{ route('contact') }}" class="text-gray-300 hover:text-white underline">Contact</a>
+                &middot;
+                &copy; {{ date('Y') }} {{ config('shop.name') }}. All rights reserved.
+            </p>
         </div>
     </footer>
 

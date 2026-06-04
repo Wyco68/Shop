@@ -74,10 +74,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <!-- Price -->
                         <div>
-                            <label for="base_price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Base Price ($)</label>
+                            <label for="base_price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Base Price ({{ $storeCurrencySymbol ?? \App\Support\Money::symbol() }})</label>
                             <div class="relative rounded-xl shadow-inner">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <span class="text-slate-400 text-sm font-bold">$</span>
+                                    <span class="text-slate-400 text-sm font-bold">{{ $storeCurrencySymbol ?? \App\Support\Money::symbol() }}</span>
                                 </div>
                                 <input type="number" step="0.01" min="0" name="base_price" id="base_price" 
                                        class="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 text-sm font-extrabold focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 placeholder-slate-400 transition" 

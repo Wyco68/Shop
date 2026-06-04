@@ -44,7 +44,7 @@ class Order extends Model
     {
         static::creating(function (Order $order): void {
             if (empty($order->currency)) {
-                $order->currency = config('shop.currency', 'USD');
+                $order->currency = \App\Support\Money::currency();
             }
         });
     }

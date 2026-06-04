@@ -38,7 +38,7 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="text-xs font-semibold text-gray-500 block mb-1.5 uppercase tracking-wide">Min Price</label>
-                                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="$0"
+                                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="{{ \App\Support\Money::symbol() }}0"
                                     class="w-full border border-gray-200/80 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition">
                             </div>
                             <div>
@@ -89,7 +89,7 @@
                             @php $activeDiscount = $product->discounts->first(); @endphp
                             @if($activeDiscount)
                                 <span class="absolute top-4 left-4 bg-black text-white text-xs px-2.5 py-1 rounded-full font-bold tracking-wide">
-                                    {{ $activeDiscount->type === 'percentage' ? $activeDiscount->value.'% OFF' : '$'.$activeDiscount->value.' OFF' }}
+                                    {{ $activeDiscount->badgeLabel() }}
                                 </span>
                             @endif
                         </div>

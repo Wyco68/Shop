@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\AdminBootstrapService;
+use App\Http\Requests\SetupStoreRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SetupController extends Controller
@@ -18,16 +18,9 @@ class SetupController extends Controller
         return view('setup.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SetupStoreRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'store_name' => ['required', 'string', 'max:255'],
-            'name' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'password' => AdminBootstrapService::passwordRules(),
-        ]);
-
-        $this->adminBootstrap->createAdmin($validated);
+        $this->adminBootstrap->createAdmin($request->validated());
 
         return redirect()->route('login')->with('success', 'Administrator created. Sign in to continue.');
     }

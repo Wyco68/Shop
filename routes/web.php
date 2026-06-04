@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RefundController;
 use App\Http\Controllers\Admin;
@@ -24,6 +25,7 @@ Route::middleware('redirect_admin')->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 });
 
 // Authenticated routes
@@ -71,6 +73,11 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('branding', [Admin\BrandingSettingsController::class, 'edit'])->name('branding.edit');
         Route::put('branding', [Admin\BrandingSettingsController::class, 'update'])->name('branding.update');
+
+        Route::get('support', [Admin\SupportSettingsController::class, 'index'])->name('support.index');
+        Route::post('support', [Admin\SupportSettingsController::class, 'store'])->name('support.store');
+        Route::put('support/{supportContact}', [Admin\SupportSettingsController::class, 'update'])->name('support.update');
+        Route::delete('support/{supportContact}', [Admin\SupportSettingsController::class, 'destroy'])->name('support.destroy');
 
         Route::get('payments', [Admin\PaymentSettingsController::class, 'index'])->name('payments.index');
         Route::post('payments', [Admin\PaymentSettingsController::class, 'store'])->name('payments.store');

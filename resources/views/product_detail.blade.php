@@ -38,7 +38,7 @@
                 @php $activeDiscount = $product->discounts->first(); @endphp
                 @if($activeDiscount)
                     <span class="bg-black text-white text-sm px-3 py-1 rounded-full font-bold tracking-wide">
-                        {{ $activeDiscount->type === 'percentage' ? $activeDiscount->value.'% OFF' : '$'.$activeDiscount->value.' OFF' }}
+                        {{ $activeDiscount->badgeLabel() }}
                     </span>
                 @endif
             </div>

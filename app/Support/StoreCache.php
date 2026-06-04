@@ -14,11 +14,18 @@ class StoreCache
 
     public const SETTINGS = 'cache:settings';
 
+    public const SUPPORT_CONTACTS = 'cache:support_contacts';
+
     public const PRODUCT_LISTINGS_REGISTRY = 'products.index.registry';
 
     public static function forgetSettings(): void
     {
         Cache::forget(self::SETTINGS);
+    }
+
+    public static function forgetSupportContacts(): void
+    {
+        Cache::forget(self::SUPPORT_CONTACTS);
     }
 
     public static function forgetCategories(): void

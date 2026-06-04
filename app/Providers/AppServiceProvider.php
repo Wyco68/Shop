@@ -13,6 +13,7 @@ use App\Listeners\NotifyUserOrderStatusUpdated;
 use App\Listeners\NotifyUserRefundApproved;
 use App\Listeners\NotifyUserRefundRejected;
 use App\Services\StoreSettingsService;
+use App\Services\SupportContactService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\View;
 use Illuminate\Http\Request;
@@ -61,15 +62,35 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
-        if (Schema::hasTable('store_settings')) {
-            config(['shop.name' => app(StoreSettingsService::class)->displayName()]);
+        try {
+            if (Schema::hasTable('store_settings')) {
+                $storeSettings = app(StoreSettingsService::class);
+                config(['shop.name' => $storeSettings->displayName()]);
+                if (Schema::hasColumn('store_settings', 'currency_code')) {
+                    $storeSettings->syncCurrencyToConfig();
+                }
+            }
+        } catch (\Throwable) {
+            // Database may be unavailable during console boot or package discovery.
         }
 
         View::composer(['layouts.app', 'layouts.admin', 'layouts.navigation', 'layouts.guest'], function ($view) {
             $settings = app(StoreSettingsService::class);
+            $supportContacts = collect();
+
+            try {
+                if (Schema::hasTable('support_contacts')) {
+                    $supportContacts = app(SupportContactService::class)->enabled();
+                }
+            } catch (\Throwable) {
+                //
+            }
+
             $view->with([
                 'storeFaviconUrl' => $settings->faviconUrl(),
                 'storeLogoUrl' => $settings->logoUrl(),
+                'storeCurrencySymbol' => \App\Support\Money::symbol(),
+                'supportContacts' => $supportContacts,
             ]);
         });
     }
