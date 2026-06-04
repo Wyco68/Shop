@@ -14,6 +14,8 @@ class StoreCache
 
     public const SETTINGS = 'cache:settings';
 
+    public const PRODUCT_LISTINGS_REGISTRY = 'products.index.registry';
+
     public static function forgetSettings(): void
     {
         Cache::forget(self::SETTINGS);
@@ -28,11 +30,12 @@ class StoreCache
     public static function forgetProducts(): void
     {
         Cache::forget(self::HOME_FEATURED);
-        // Product listing keys use prefix products.index.*
-        // Flushed via pattern when using Redis; fallback forget common first page
-        foreach (['products.index.default'] as $key) {
+
+        $keys = Cache::get(self::PRODUCT_LISTINGS_REGISTRY, []);
+        foreach ($keys as $key) {
             Cache::forget($key);
         }
+        Cache::forget(self::PRODUCT_LISTINGS_REGISTRY);
     }
 
     public static function productListingKey(array $filters, int $page = 1): string
@@ -40,5 +43,14 @@ class StoreCache
         ksort($filters);
 
         return 'products.index.'.md5(json_encode($filters).'.p'.$page);
+    }
+
+    public static function registerProductListingKey(string $key): void
+    {
+        $keys = Cache::get(self::PRODUCT_LISTINGS_REGISTRY, []);
+        if (! in_array($key, $keys, true)) {
+            $keys[] = $key;
+            Cache::forever(self::PRODUCT_LISTINGS_REGISTRY, $keys);
+        }
     }
 }

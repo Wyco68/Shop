@@ -7,6 +7,8 @@ use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use App\Support\StoreCache;
 use Tests\TestCase;
 
 class ProductCatalogTest extends TestCase
@@ -62,6 +64,29 @@ class ProductCatalogTest extends TestCase
         $response->assertSee('USB Charger');
     }
 
+    public function test_product_show_displays_uploaded_image_url(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/test-cover.jpg';
+        Storage::disk('public')->put($path, 'fake-image');
+
+        $category = Category::factory()->create();
+        $product = Product::factory()->create([
+            'slug' => 'imaged-widget',
+            'category_id' => $category->id,
+            'is_active' => true,
+            'images' => [$path],
+        ]);
+        ProductVariant::factory()->create(['product_id' => $product->id]);
+
+        $expectedUrl = Storage::disk('public')->url($path);
+
+        $this->get('/products/imaged-widget')
+            ->assertOk()
+            ->assertSee($expectedUrl, false);
+    }
+
     public function test_inactive_product_returns_404(): void
     {
         $category = Category::factory()->create();
@@ -74,6 +99,33 @@ class ProductCatalogTest extends TestCase
         $response = $this->get('/products/inactive-item');
 
         $response->assertStatus(404);
+    }
+
+    public function test_category_filter_cache_invalidates_when_product_image_updated(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/filtered-cover.jpg';
+        Storage::disk('public')->put($path, 'fake-image');
+
+        $category = Category::factory()->create();
+        $product = Product::factory()->create([
+            'name' => 'Filtered Widget',
+            'category_id' => $category->id,
+            'is_active' => true,
+            'images' => null,
+        ]);
+
+        $this->get('/products?category='.$category->id)->assertOk();
+
+        $product->update(['images' => [$path]]);
+        StoreCache::forgetProducts();
+
+        $expectedUrl = Storage::disk('public')->url($path);
+
+        $this->get('/products?category='.$category->id)
+            ->assertOk()
+            ->assertSee($expectedUrl, false);
     }
 
     public function test_products_filter_by_category(): void

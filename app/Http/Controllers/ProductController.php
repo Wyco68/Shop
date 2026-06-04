@@ -24,6 +24,7 @@ class ProductController extends Controller
 
         $page = max(1, (int) $request->input('page', 1));
         $cacheKey = StoreCache::productListingKey($filters, $page);
+        StoreCache::registerProductListingKey($cacheKey);
 
         $products = Cache::remember($cacheKey, 600, function () use ($filters, $page) {
             $query = Product::with('category', 'discounts', 'defaultVariant.inventory')

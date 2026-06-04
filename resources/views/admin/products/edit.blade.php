@@ -139,7 +139,7 @@
                     <x-admin.media-upload
                         name="image"
                         id="product_image"
-                        :preview="$product->image_path ? asset('storage/'.$product->image_path) : ''"
+                        :preview="$product->image_url ?? ''"
                         placeholder="Upload image cover"
                         button="Update File"
                         hint="Leave empty to keep current image"

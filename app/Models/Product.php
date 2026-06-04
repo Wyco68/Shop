@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SecureUploadService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -65,8 +66,24 @@ class Product extends Model
         return (float) $this->base_price;
     }
 
-    public function getImagePathAttribute()
+    public function getImagePathAttribute(): ?string
     {
-        return $this->images[0] ?? null;
+        $images = $this->images;
+
+        return is_array($images) ? ($images[0] ?? null) : null;
+    }
+
+    public function imageUrl(): ?string
+    {
+        if (! $this->image_path) {
+            return null;
+        }
+
+        return app(SecureUploadService::class)->url($this->image_path);
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->imageUrl();
     }
 }

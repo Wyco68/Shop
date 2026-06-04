@@ -128,13 +128,11 @@
                     <a href="{{ route('admin.products.edit', $product) }}" class="group block bg-white rounded-3xl border border-slate-100 shadow-sm shadow-slate-100/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col relative">
                         <!-- Product Image Cover -->
                         <div class="bg-[#f5f5f7] h-56 flex items-center justify-center p-6 relative overflow-hidden">
-                            @if($product->image_path)
-                                <img src="{{ asset('storage/'.$product->image_path) }}" alt="" class="h-full w-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-500">
-                            @else
-                                <svg class="w-20 h-20 text-slate-300 group-hover:scale-105 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                            @endif
+                            <x-product-image
+                                :url="$product->image_url"
+                                :alt="$product->name"
+                                class="h-full w-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-500 {{ $product->image_url ? '' : 'w-20 h-20 text-slate-300' }}"
+                            />
                             
                             <!-- Badges -->
                             <div class="absolute top-4 left-4 flex flex-col gap-1.5">
