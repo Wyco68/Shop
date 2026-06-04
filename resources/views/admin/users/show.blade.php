@@ -40,18 +40,6 @@
                 </div>
             </div>
         </div>
-        
-        <div class="shrink-0 flex items-center justify-center px-4 py-2 rounded-xl border border-slate-100 shadow-sm
-            @if($profile['tier']['raw'] === 'gold') bg-amber-50 text-amber-600 border-amber-200
-            @elseif($profile['tier']['raw'] === 'silver') bg-slate-50 text-slate-600 border-slate-200
-            @else bg-orange-50 text-orange-700 border-orange-200 @endif">
-            <span class="font-bold uppercase tracking-wider text-sm flex items-center gap-2">
-                @if($profile['tier']['raw'] === 'gold')
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/></svg>
-                @endif
-                {{ $profile['tier']['name'] }} Member
-            </span>
-        </div>
     </div>
 
     {{-- 2. Financial Summary Cards --}}
@@ -83,35 +71,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 space-y-8">
-            {{-- 3. Tier Progress Bar --}}
-            <x-admin.card title="Tier Progress">
-                @if($profile['tier']['next_threshold'] === null)
-                    <div class="text-center py-6">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-500 mb-3">
-                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800">Top Tier Reached</h3>
-                        <p class="text-sm text-slate-500 mt-1">This user has reached the highest membership tier (Gold).</p>
-                    </div>
-                @else
-                    <div class="mt-2">
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="font-semibold text-slate-700">Current: {{ $profile['tier']['name'] }}</span>
-                            <span class="text-slate-500">Next: {{ $profile['tier']['next_tier_name'] }}</span>
-                        </div>
-                        <div class="w-full bg-slate-100 rounded-full h-3 mb-3 border border-slate-200 overflow-hidden">
-                            <div class="bg-gradient-to-r from-sky-400 to-indigo-500 h-3 rounded-full transition-all duration-500 relative" style="width: {{ $profile['tier']['progress_percent'] }}%">
-                                <div class="absolute inset-0 bg-white/20" style="background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem;"></div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-500 text-center">
-                            <span class="font-bold text-slate-700"><x-money :amount="$profile['tier']['remaining']" /></span> away from {{ $profile['tier']['next_tier_name'] }}
-                        </p>
-                    </div>
-                @endif
-            </x-admin.card>
-
-            {{-- 4. Order Status Breakdown --}}
+            {{-- Order Status Breakdown --}}
             <x-admin.card title="Order Statistics">
                 <div class="space-y-4 mt-2">
                     <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">

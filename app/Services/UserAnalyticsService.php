@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\User;
-use App\Models\UserSpending;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -81,15 +80,11 @@ class UserAnalyticsService
         // 4. Recent orders — latest 5, no N+1 (eager load payment method)
         $recentOrders = $this->fetchRecentOrders($userId);
 
-        // 5. Tier info — reads from user_spending table (set by DiscountService)
-        $tier = $this->fetchTierInfo($userId, (float) $metrics['total_spent']);
-
         return [
             'user'         => $this->formatUser($user),
             'metrics'      => $metrics,
             'order_stats'  => $orderStats,
             'recent_orders' => $recentOrders,
-            'tier'         => $tier,
         ];
     }
 
@@ -174,60 +169,6 @@ class UserAnalyticsService
                 'created_at' => $o->created_at,
             ])
             ->toArray();
-    }
-
-    // ----------------------------------------------------------------
-    // Private: Tier info
-    // ----------------------------------------------------------------
-
-    private function fetchTierInfo(int $userId, float $computedSpent): array
-    {
-        // Prefer stored value from user_spending table (updated transactionally)
-        // Fall back to computing on-the-fly from aggregate query result
-        $spending = UserSpending::where('user_id', $userId)->first();
-
-        $totalSpent = $spending ? (float) $spending->total_spent : $computedSpent;
-        $tierName   = UserSpending::computeTier($totalSpent);
-
-        [$nextThreshold, $nextTierName] = $this->nextTier($tierName, $totalSpent);
-
-        $progressPercent = $this->tierProgress($tierName, $totalSpent, $nextThreshold);
-
-        return [
-            'name'             => ucfirst($tierName),
-            'raw'              => $tierName,
-            'total_spent'      => round($totalSpent, 2),
-            'next_threshold'   => $nextThreshold,
-            'next_tier_name'   => $nextTierName,
-            'progress_percent' => $progressPercent,
-            'remaining'        => $nextThreshold !== null ? max(0, round($nextThreshold - $totalSpent, 2)) : 0,
-        ];
-    }
-
-    private function nextTier(string $currentTier, float $totalSpent): array
-    {
-        return match ($currentTier) {
-            UserSpending::TIER_BRONZE => [UserSpending::SILVER_THRESHOLD, 'Silver'],
-            UserSpending::TIER_SILVER => [UserSpending::GOLD_THRESHOLD, 'Gold'],
-            default                   => [null, null], // Gold — no next tier
-        };
-    }
-
-    private function tierProgress(string $tier, float $totalSpent, ?float $nextThreshold): int
-    {
-        if ($nextThreshold === null) {
-            return 100; // Gold — always full
-        }
-
-        $base = match ($tier) {
-            UserSpending::TIER_SILVER => UserSpending::SILVER_THRESHOLD,
-            default                   => 0.0,
-        };
-
-        $range = $nextThreshold - $base;
-        if ($range <= 0) return 100;
-
-        return (int) min(100, round((($totalSpent - $base) / $range) * 100));
     }
 
     // ----------------------------------------------------------------
