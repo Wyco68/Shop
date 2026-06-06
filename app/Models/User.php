@@ -29,12 +29,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'is_active' => 'boolean',
             'notify_order_status_email' => 'boolean',
+            'is_owner' => 'boolean',
         ];
     }
 
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin->value;
+    }
+
+    /**
+     * The single permanent admin account, exempt from demo-mode restrictions
+     * (session cap, activity rollback, password-reset cooldown).
+     */
+    public function isOwnerAdmin(): bool
+    {
+        return $this->isAdmin() && (bool) $this->is_owner;
     }
 
     /**

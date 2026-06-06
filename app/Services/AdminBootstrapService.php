@@ -17,6 +17,14 @@ class AdminBootstrapService
         return User::hasAdmin();
     }
 
+    public function ownerExists(): bool
+    {
+        return User::query()
+            ->where('role', UserRole::Admin->value)
+            ->where('is_owner', true)
+            ->exists();
+    }
+
     public static function isGrantingAdminRole(): bool
     {
         return static::$grantingAdminRole;
@@ -69,6 +77,49 @@ class AdminBootstrapService
         static::withAdminGrant(function () use ($user): void {
             $user->forceFill([
                 'role' => UserRole::Admin->value,
+                'email_verified_at' => now(),
+            ])->save();
+        });
+
+        return $user->refresh();
+    }
+
+    /**
+     * Create the single permanent owner admin. Distinct from the shared/demo
+     * admin created by createAdmin(): the owner is exempt from demo-mode
+     * restrictions (session cap, activity rollback, reset cooldown), and
+     * password-reset links for the demo admin are always routed to the
+     * owner's inbox. UserObserver::saving() rejects a second owner row.
+     *
+     * @param  array{name?: string, email: string, password: string}  $data
+     */
+    public function createOwner(array $data): User
+    {
+        if (! $this->adminExists()) {
+            throw ValidationException::withMessages([
+                'email' => ['Run store:setup to create the shared admin account first.'],
+            ]);
+        }
+
+        if ($this->ownerExists()) {
+            throw ValidationException::withMessages([
+                'email' => ['An owner administrator account already exists.'],
+            ]);
+        }
+
+        $name = $data['name'] ?? strstr($data['email'], '@', true) ?: 'Owner';
+
+        $user = User::query()->create([
+            'name' => $name,
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'is_active' => true,
+        ]);
+
+        static::withAdminGrant(function () use ($user): void {
+            $user->forceFill([
+                'role' => UserRole::Admin->value,
+                'is_owner' => true,
                 'email_verified_at' => now(),
             ])->save();
         });

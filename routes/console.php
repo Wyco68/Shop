@@ -11,6 +11,60 @@ use function Laravel\Prompts\info;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 
+Artisan::command('admin:create-owner', function (AdminBootstrapService $adminBootstrap) {
+    if ($adminBootstrap->ownerExists()) {
+        error('An owner administrator account already exists.');
+
+        return self::FAILURE;
+    }
+
+    $email = text(
+        label: 'Owner email',
+        required: true,
+        validate: fn (string $value) => filter_var($value, FILTER_VALIDATE_EMAIL)
+            ? null
+            : 'Enter a valid email address.',
+    );
+
+    $name = text(label: 'Owner name (optional)');
+
+    $plainPassword = password(label: 'Owner password', required: true);
+    $confirm = password(label: 'Confirm owner password', required: true);
+
+    if ($plainPassword !== $confirm) {
+        error('Passwords do not match.');
+
+        return self::FAILURE;
+    }
+
+    $validator = Validator::make(
+        ['password' => $plainPassword, 'password_confirmation' => $confirm],
+        ['password' => AdminBootstrapService::passwordRules()],
+    );
+
+    if ($validator->fails()) {
+        error($validator->errors()->first('password'));
+
+        return self::FAILURE;
+    }
+
+    try {
+        $owner = $adminBootstrap->createOwner([
+            'name' => $name ?: null,
+            'email' => strtolower($email),
+            'password' => $plainPassword,
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        error($e->getMessage());
+
+        return self::FAILURE;
+    }
+
+    info("Owner administrator created: {$owner->email}. All admin password-reset links now route to this address.");
+
+    return self::SUCCESS;
+})->purpose('Create the permanent owner admin account (CLI only)');
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');

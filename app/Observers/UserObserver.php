@@ -18,6 +18,13 @@ class UserObserver
 
     public function saving(User $user): void
     {
+        if (! AdminBootstrapService::isGrantingAdminRole() && $user->isDirty('is_owner')) {
+            $user->setAttribute(
+                'is_owner',
+                $user->exists ? (bool) $user->getOriginal('is_owner') : false,
+            );
+        }
+
         if (! $user->isDirty('role')) {
             return;
         }
@@ -33,17 +40,31 @@ class UserObserver
             return;
         }
 
-        if ($user->role === UserRole::Admin->value && $this->anotherAdminExists($user)) {
+        if ($user->role !== UserRole::Admin->value) {
+            return;
+        }
+
+        // At most two admin rows may ever exist: one shared/demo admin (is_owner = false)
+        // and one designated owner (is_owner = true). This mirrors the original
+        // single-admin guard while allowing exactly one permanent owner account.
+        if ($user->is_owner && $this->anotherAdminExists($user, onlyOwners: true)) {
+            throw ValidationException::withMessages([
+                'email' => ['An owner administrator account already exists.'],
+            ]);
+        }
+
+        if (! $user->is_owner && $this->anotherAdminExists($user, onlyOwners: false)) {
             throw ValidationException::withMessages([
                 'email' => ['An administrator account already exists.'],
             ]);
         }
     }
 
-    private function anotherAdminExists(User $user): bool
+    private function anotherAdminExists(User $user, bool $onlyOwners): bool
     {
         return User::query()
             ->where('role', UserRole::Admin->value)
+            ->where('is_owner', $onlyOwners)
             ->when($user->exists, fn ($query) => $query->where('id', '!=', $user->id))
             ->exists();
     }
