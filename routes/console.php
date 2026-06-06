@@ -119,3 +119,4 @@ Artisan::command('admin:change-password', function (AdminPasswordService $passwo
 })->purpose('Change an administrator password (CLI only)');
 
 Schedule::command('notifications:prune-read')->daily();
+Schedule::command('demo:sweep-sessions')->everyMinute();

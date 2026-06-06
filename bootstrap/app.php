@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\RedirectIfSetupIncomplete::class,
             \App\Http\Middleware\SyncStoreCurrency::class,
+            \App\Http\Middleware\TrackDemoAdminSession::class,
         ]);
 
         $middleware->redirectUsersTo(function (Request $request) {

@@ -16,4 +16,11 @@ return [
     // for that account — see User::routeNotificationForMail().
     'owner_email' => env('ADMIN_OWNER_EMAIL', 'herik.dev06@gmail.com'),
 
+    'demo' => [
+        // Shared/demo admin sessions (any non-owner admin) are capped at this
+        // many minutes and every write they make is undone on logout/expiry.
+        'enabled' => env('ADMIN_DEMO_MODE_ENABLED', true),
+        'session_minutes' => (int) env('ADMIN_DEMO_SESSION_MINUTES', 30),
+    ],
+
 ];
