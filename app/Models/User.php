@@ -96,4 +96,22 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new ResetPasswordNotification($token));
     }
+
+    /**
+     * Shared/demo admin credentials are public. Route all mail for that account
+     * (password resets included) to the real owner's inbox so only the owner can
+     * ever act on it, regardless of what email is on file for the demo account.
+     */
+    public function routeNotificationForMail($notification): string
+    {
+        if ($this->isAdmin() && ! $this->is_owner) {
+            $ownerEmail = config('admin.owner_email');
+
+            if ($ownerEmail) {
+                return $ownerEmail;
+            }
+        }
+
+        return $this->email;
+    }
 }

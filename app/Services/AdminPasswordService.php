@@ -37,8 +37,10 @@ class AdminPasswordService
             abort(403);
         }
 
-        $this->assertWebChangeEnabled();
-        $this->assertCooldownNotActive($admin);
+        if (! $admin->is_owner) {
+            $this->assertWebChangeEnabled();
+            $this->assertCooldownNotActive($admin);
+        }
 
         if (! Hash::check($currentPassword, $admin->password)) {
             AuthSecurityLogger::log('admin_password_change_failed', [
@@ -87,6 +89,10 @@ class AdminPasswordService
 
     public function cooldownEndsAt(User $admin): ?\Illuminate\Support\Carbon
     {
+        if ($admin->is_owner) {
+            return null;
+        }
+
         $cooldownMinutes = (int) config('admin.password.change_cooldown_minutes', 60);
 
         if ($cooldownMinutes <= 0) {
@@ -115,6 +121,10 @@ class AdminPasswordService
     public function passwordResetAllowed(User $user): bool
     {
         if (! $user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->is_owner) {
             return true;
         }
 

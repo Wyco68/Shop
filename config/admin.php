@@ -11,4 +11,9 @@ return [
         'check_breached' => env('ADMIN_PASSWORD_CHECK_BREACHED', true),
     ],
 
+    // Real owner inbox. All mail for the shared/demo admin account (password
+    // resets included) is routed here instead of whatever email is on file
+    // for that account — see User::routeNotificationForMail().
+    'owner_email' => env('ADMIN_OWNER_EMAIL', 'herik.dev06@gmail.com'),
+
 ];
