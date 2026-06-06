@@ -12,8 +12,8 @@ class DatabaseSeeder extends Seeder
     /**
      * Intentionally empty — no demo catalog or users.
      *
-     * After migrate, create the first admin:
-     *   php artisan app:init-admin
+     * After migrate, complete first-run setup in the browser:
+     *   /setup
      */
     public function run(): void
     {

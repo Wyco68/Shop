@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\AdminPasswordService;
+use App\Services\AuthSecurityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -10,6 +13,10 @@ use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
 {
+    public function __construct(
+        private readonly AdminPasswordService $adminPasswords,
+    ) {}
+
     /**
      * Display the password reset link request view.
      */
@@ -29,16 +36,41 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
+        $email = $request->string('email')->lower()->toString();
+        $user = User::query()->where('email', $email)->first();
+
+        if ($user?->isAdmin() && ! $this->adminPasswords->passwordResetAllowed($user)) {
+            AuthSecurityLogger::log('admin_password_reset_blocked', [
+                'email' => $email,
+                'reason' => $this->adminPasswords->passwordResetEnabled() ? 'cooldown' : 'disabled',
+            ]);
+
+            // Do not reveal that the account exists or that reset is blocked.
+            return back()->with('status', __(Password::RESET_LINK_SENT));
+        }
+
         $status = Password::sendResetLink(
             $request->only('email')
         );
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if ($status === Password::RESET_LINK_SENT) {
+            $event = $user?->isAdmin()
+                ? 'admin_password_reset_requested'
+                : 'password_reset_requested';
+
+            AuthSecurityLogger::log($event, [
+                'email' => $email,
+            ]);
+
+            return back()->with('status', __($status));
+        }
+
+        AuthSecurityLogger::log('password_reset_request_failed', [
+            'email' => $email,
+            'status' => $status,
+        ]);
+
+        return back()->withInput($request->only('email'))
+            ->withErrors(['email' => __($status)]);
     }
 }

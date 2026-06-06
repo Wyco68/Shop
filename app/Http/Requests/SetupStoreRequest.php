@@ -25,6 +25,9 @@ class SetupStoreRequest extends FormRequest
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => AdminBootstrapService::passwordRules(),
+            'role' => ['prohibited'],
+            'is_admin' => ['prohibited'],
+            'is_active' => ['prohibited'],
         ];
     }
 

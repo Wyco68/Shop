@@ -47,6 +47,7 @@ class AdminPasswordCliTest extends TestCase
 
     public function test_branding_settings_requires_admin(): void
     {
+        User::factory()->admin()->create();
         $user = User::factory()->create();
 
         $this->actingAs($user)->get(route('admin.settings.branding.edit'))->assertForbidden();

@@ -31,8 +31,8 @@ class ProfileController extends Controller
         $validated = $request->validated();
 
         if ($request->user()->isAdmin() && $request->filled('password')) {
-            return Redirect::route('profile.edit')
-                ->with('error', 'Administrator passwords can only be changed via: php artisan admin:change-password');
+            return Redirect::route('admin.settings.security.edit')
+                ->with('error', 'Administrator passwords must be changed from Admin → Security.');
         }
 
         if (! empty($validated['password'] ?? null)) {
@@ -41,7 +41,9 @@ class ProfileController extends Controller
             unset($validated['password']);
         }
 
-        $request->user()->fill($validated);
+        $request->user()->fill(collect($validated)->only([
+            'name', 'email', 'phone_num', 'address', 'password',
+        ])->all());
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;

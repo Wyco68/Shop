@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -32,9 +30,12 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => PasswordRules::validationRules(),
             'phone_num' => ['required', 'string', 'max:20'],
             'address' => ['required', 'string', 'max:500'],
+            'role' => ['prohibited'],
+            'is_admin' => ['prohibited'],
+            'is_active' => ['prohibited'],
         ]);
 
         $user = User::create([
@@ -45,12 +46,12 @@ class RegisteredUserController extends Controller
             'address' => $request->address,
         ]);
 
-        $user->forceFill(['role' => UserRole::User->value])->save();
-
         event(new Registered($user));
 
-        Auth::login($user);
+        $user->sendEmailVerificationNotification();
 
-        return redirect(route('home', absolute: false));
+        return redirect()
+            ->route('register.success')
+            ->with('email', $user->email);
     }
 }

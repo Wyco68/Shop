@@ -5,14 +5,38 @@ namespace App\Services;
 use App\Enums\CurrencyPosition;
 use App\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Validation\Rules\Password;
+use App\Support\PasswordRules;
 use Illuminate\Validation\ValidationException;
 
 class AdminBootstrapService
 {
+    private static bool $grantingAdminRole = false;
+
     public function adminExists(): bool
     {
         return User::hasAdmin();
+    }
+
+    public static function isGrantingAdminRole(): bool
+    {
+        return static::$grantingAdminRole;
+    }
+
+    /**
+     * @template TReturn
+     *
+     * @param  callable(): TReturn  $callback
+     * @return TReturn
+     */
+    public static function withAdminGrant(callable $callback): mixed
+    {
+        static::$grantingAdminRole = true;
+
+        try {
+            return $callback();
+        } finally {
+            static::$grantingAdminRole = false;
+        }
     }
 
     /**
@@ -40,17 +64,20 @@ class AdminBootstrapService
             'email' => $data['email'],
             'password' => $data['password'],
             'is_active' => true,
-            'email_verified_at' => now(),
         ]);
 
-        // Role is not mass-assignable; set explicitly for bootstrap only.
-        $user->forceFill(['role' => UserRole::Admin->value])->save();
+        static::withAdminGrant(function () use ($user): void {
+            $user->forceFill([
+                'role' => UserRole::Admin->value,
+                'email_verified_at' => now(),
+            ])->save();
+        });
 
         return $user->refresh();
     }
 
     public static function passwordRules(): array
     {
-        return ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()];
+        return PasswordRules::validationRules();
     }
 }

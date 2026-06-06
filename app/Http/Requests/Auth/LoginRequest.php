@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
+use App\Services\AuthSecurityLogger;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -44,9 +46,28 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            AuthSecurityLogger::log('failed_login', [
+                'email' => $this->string('email')->lower(),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        $user = Auth::user();
+
+        if ($user instanceof User && ! $user->hasVerifiedEmail()) {
+            Auth::logout();
+
+            AuthSecurityLogger::log('unverified_login_attempt', [
+                'email' => $user->email,
+                'user_id' => $user->id,
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => 'Please verify your email before logging in.',
+            ])->errorBag('unverified');
         }
 
         RateLimiter::clear($this->throttleKey());
@@ -66,6 +87,11 @@ class LoginRequest extends FormRequest
         event(new Lockout($this));
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        AuthSecurityLogger::log('login_rate_limited', [
+            'email' => $this->string('email')->lower(),
+            'seconds_remaining' => $seconds,
+        ]);
 
         throw ValidationException::withMessages([
             'email' => trans('auth.throttle', [

@@ -93,7 +93,12 @@
     @if($user->isAdmin())
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 text-sm text-amber-900">
         <p class="font-semibold mb-1">Administrator account</p>
-        <p>Password changes are CLI-only for security: <code class="bg-amber-100 px-1 rounded text-xs">php artisan admin:change-password</code></p>
+        <p>
+            Change your password in
+            <a href="{{ route('admin.settings.security.edit') }}" class="text-amber-950 underline font-medium">Admin → Security</a>.
+            CLI fallback:
+            <code class="bg-amber-100 px-1 rounded text-xs">php artisan admin:change-password</code>
+        </p>
     </div>
     @else
     {{-- Change Password --}}

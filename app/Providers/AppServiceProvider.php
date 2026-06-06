@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Observers\UserObserver;
 use App\Events\OrderPlaced;
 use App\Events\OrderStatusUpdated;
 use App\Events\RefundApproved;
@@ -15,6 +17,7 @@ use App\Listeners\NotifyUserRefundRejected;
 use App\Services\StoreSettingsService;
 use App\Services\SupportContactService;
 use Illuminate\Cache\RateLimiting\Limit;
+use App\Support\PasswordRules;
 use Illuminate\Support\Facades\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -22,6 +25,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,8 +42,35 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        User::observe(UserObserver::class);
+
+        Password::defaults(fn () => PasswordRules::defaults());
+
         RateLimiter::for('auth', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by(
+                strtolower((string) $request->input('email')).'|'.$request->ip()
+            );
+        });
+
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip());
+        });
+
+        RateLimiter::for('email-resend', function (Request $request) {
+            return Limit::perMinute(3)->by(
+                strtolower((string) $request->input('email')).'|'.$request->ip()
+            );
+        });
+
+        RateLimiter::for('admin-password', function (Request $request) {
+            $window = max(1, (int) config('admin.password.rate_limit_minutes', 15));
+
+            return Limit::perMinutes($window, (int) config('admin.password.max_attempts', 3))
+                ->by('admin-password|'.($request->user()?->id ?: $request->ip()));
         });
 
         RateLimiter::for('checkout', function (Request $request) {

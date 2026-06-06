@@ -24,6 +24,10 @@ class RedirectAdmin
             return $next($request);
         }
 
+        if ($request->routeIs('password.confirm') || $request->routeIs('password.store')) {
+            return $next($request);
+        }
+
         if ($request->routeIs('notifications.index') && ! $request->expectsJson()) {
             return redirect()->route('admin.notifications.index');
         }

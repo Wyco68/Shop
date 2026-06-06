@@ -116,6 +116,13 @@
             <div>
                 <span class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Settings</span>
                 <div class="space-y-1">
+                    <a href="{{ route('admin.settings.security.edit') }}"
+                       class="relative z-10 flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.settings.security.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Security
+                    </a>
                     <a href="{{ route('admin.settings.branding.edit') }}"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group {{ request()->routeIs('admin.settings.branding.*') ? 'bg-sky-500/10 text-sky-400 font-semibold border-l-4 border-sky-400 pl-2' : 'hover:bg-slate-800/60 hover:text-white' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -204,8 +211,15 @@
                          x-transition:leave="transition ease-in duration-75"
                          x-transition:leave-start="transform opacity-100 scale-100"
                          x-transition:leave-end="transform opacity-0 scale-95"
-                         class="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-lg shadow-slate-100/50 py-1.5 z-50 focus:outline-none"
+                         class="absolute right-0 mt-2 w-52 bg-white border border-slate-100 rounded-xl shadow-lg shadow-slate-100/50 py-1.5 z-50 focus:outline-none"
                          style="display: none;">
+                        <a href="{{ route('admin.settings.security.edit') }}"
+                           class="w-full flex items-center gap-2 px-4 py-2.5 min-h-[44px] text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <svg class="w-4.5 h-4.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            Security
+                        </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50/50 transition-colors text-left">

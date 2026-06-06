@@ -10,6 +10,8 @@ class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const PASSWORD = 'Password1!Secure';
+
     public function test_login_screen_can_be_rendered(): void
     {
         $response = $this->get('/login');
@@ -23,11 +25,24 @@ class AuthenticationTest extends TestCase
 
         $response = $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password',
+            'password' => self::PASSWORD,
         ]);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('home', absolute: false));
+    }
+
+    public function test_unverified_users_cannot_login(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => self::PASSWORD,
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('email', null, 'unverified');
     }
 
     public function test_admins_are_redirected_to_admin_dashboard_after_login(): void
@@ -36,7 +51,7 @@ class AuthenticationTest extends TestCase
 
         $response = $this->post('/login', [
             'email' => $admin->email,
-            'password' => 'password',
+            'password' => self::PASSWORD,
         ]);
 
         $this->assertAuthenticated();

@@ -24,10 +24,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prepend(\App\Http\Middleware\TrustForwardedProto::class);
         $middleware->web(append: [
+            \App\Http\Middleware\RedirectIfSetupIncomplete::class,
             \App\Http\Middleware\SyncStoreCurrency::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectGuestsTo(function () {
+            if (! \App\Models\User::hasAdmin()) {
+                return route('setup.create');
+            }
+
+            return route('login');
+        });
 
         $middleware->redirectUsersTo(function (Request $request) {
             return $request->user()?->homeUrl() ?? route('home');

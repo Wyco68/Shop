@@ -16,6 +16,9 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'role' => ['prohibited'],
+            'is_admin' => ['prohibited'],
+            'is_active' => ['prohibited'],
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',

@@ -38,8 +38,7 @@ wait_for "${REDIS_HOST:-redis}" "${REDIS_PORT:-6379}" "Redis"
 php artisan migrate --force --no-interaction
 
 if ! php artisan tinker --execute="echo \\App\\Models\\User::hasAdmin() ? 'yes' : 'no';" 2>/dev/null | grep -q yes; then
-    echo "[entrypoint] No admin yet. Run: docker compose -f docker/docker-compose.yml exec app php artisan app:init-admin"
-    echo "[entrypoint] Or open http://localhost:8080/setup"
+    echo "[entrypoint] No admin yet. Open http://localhost:8080/setup to configure the store and administrator."
 fi
 
 php artisan storage:link --force 2>/dev/null || true

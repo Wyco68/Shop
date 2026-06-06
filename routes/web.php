@@ -28,8 +28,8 @@ Route::middleware('redirect_admin')->group(function () {
     Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 });
 
-// Authenticated routes
-Route::middleware(['auth', 'redirect_admin'])->group(function () {
+// Authenticated routes (email verification required)
+Route::middleware(['auth', 'verified', 'redirect_admin'])->group(function () {
     // Cart (DB-based)
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
@@ -50,7 +50,7 @@ Route::middleware(['auth', 'redirect_admin'])->group(function () {
     Route::post('/orders/{order}/refund', [RefundController::class, 'store'])->name('orders.refund.store');
 });
 
-Route::middleware(['auth', 'redirect_admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'redirect_admin'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -71,6 +71,12 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->name('admin.')->group(
     Route::resource('categories', Admin\CategoryController::class)->except(['show', 'create', 'edit']);
 
     Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('security', [Admin\SecuritySettingsController::class, 'edit'])
+            ->name('security.edit');
+        Route::put('security/password', [Admin\SecuritySettingsController::class, 'updatePassword'])
+            ->middleware('throttle:admin-password')
+            ->name('security.password.update');
+
         Route::get('branding', [Admin\BrandingSettingsController::class, 'edit'])->name('branding.edit');
         Route::put('branding', [Admin\BrandingSettingsController::class, 'update'])->name('branding.update');
 

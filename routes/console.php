@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\CurrencyPosition;
 use App\Services\AdminBootstrapService;
 use App\Services\AdminPasswordService;
 use Illuminate\Foundation\Inspiring;
@@ -15,104 +14,6 @@ use function Laravel\Prompts\text;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-
-Artisan::command('app:init-admin', function (AdminBootstrapService $bootstrap) {
-    if ($bootstrap->adminExists()) {
-        error('An administrator already exists. This command can only run once.');
-
-        return self::FAILURE;
-    }
-
-    $email = text(
-        label: 'Administrator email',
-        required: true,
-        validate: fn (string $value) => filter_var($value, FILTER_VALIDATE_EMAIL)
-            ? null
-            : 'Enter a valid email address.',
-    );
-
-    $storeName = text(
-        label: 'Shop name',
-        default: (string) config('shop.name'),
-        required: true,
-        validate: fn (string $value) => trim($value) !== ''
-            ? null
-            : 'Shop name is required.',
-    );
-
-    $currencyCode = text(
-        label: 'Currency code (ISO 4217)',
-        default: (string) config('shop.currency', 'USD'),
-        required: true,
-        validate: fn (string $value) => preg_match('/^[A-Za-z]{3}$/', $value)
-            ? null
-            : 'Enter a 3-letter currency code.',
-    );
-
-    $currencySymbol = text(
-        label: 'Currency symbol',
-        default: (string) config('shop.currency_symbol', '$'),
-        required: true,
-    );
-
-    $currencyPosition = select(
-        label: 'Symbol position',
-        options: [
-            CurrencyPosition::Before->value => 'Before amount',
-            CurrencyPosition::After->value => 'After amount',
-        ],
-        default: (string) config('shop.currency_position', 'before'),
-    );
-
-    $name = text(
-        label: 'Administrator display name (optional)',
-        default: strstr($email, '@', true) ?: 'Administrator',
-    );
-
-    $plainPassword = password(
-        label: 'Password',
-        required: true,
-        validate: fn (string $value) => strlen($value) >= 12
-            ? null
-            : 'Password must be at least 12 characters.',
-    );
-
-    $confirm = password(
-        label: 'Confirm password',
-        required: true,
-    );
-
-    if ($plainPassword !== $confirm) {
-        error('Passwords do not match.');
-
-        return self::FAILURE;
-    }
-
-    $validator = Validator::make(
-        ['password' => $plainPassword, 'password_confirmation' => $confirm],
-        ['password' => AdminBootstrapService::passwordRules()],
-    );
-
-    if ($validator->fails()) {
-        error($validator->errors()->first('password'));
-
-        return self::FAILURE;
-    }
-
-    $user = $bootstrap->createAdmin([
-        'store_name' => trim($storeName),
-        'currency_code' => strtoupper($currencyCode),
-        'currency_symbol' => $currencySymbol,
-        'currency_position' => $currencyPosition,
-        'name' => $name,
-        'email' => $email,
-        'password' => $plainPassword,
-    ]);
-
-    info("Administrator created: {$user->email}");
-
-    return self::SUCCESS;
-})->purpose('Create the first administrator account (one-time only)');
 
 Artisan::command('admin:change-password', function (AdminPasswordService $passwords) {
     $email = text(

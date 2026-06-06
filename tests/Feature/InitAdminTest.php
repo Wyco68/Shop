@@ -17,6 +17,9 @@ class InitAdminTest extends TestCase
     {
         $admin = app(AdminBootstrapService::class)->createAdmin([
             'store_name' => 'Store Owner Shop',
+            'currency_code' => 'USD',
+            'currency_symbol' => '$',
+            'currency_position' => 'before',
             'name' => 'Store Owner',
             'email' => 'owner@example.com',
             'password' => 'SecurePass1!Word',
@@ -37,6 +40,9 @@ class InitAdminTest extends TestCase
 
         app(AdminBootstrapService::class)->createAdmin([
             'store_name' => 'Other Shop',
+            'currency_code' => 'USD',
+            'currency_symbol' => '$',
+            'currency_position' => 'before',
             'email' => 'other@example.com',
             'password' => 'SecurePass1!Word',
         ]);
@@ -44,6 +50,8 @@ class InitAdminTest extends TestCase
 
     public function test_registration_cannot_set_admin_role(): void
     {
+        User::factory()->admin()->create();
+
         $response = $this->post('/register', [
             'name' => 'Hacker',
             'email' => 'hack@example.com',
@@ -54,11 +62,10 @@ class InitAdminTest extends TestCase
             'role' => UserRole::Admin->value,
         ]);
 
-        $response->assertRedirect(route('home'));
+        $response->assertSessionHasErrors('role');
 
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseMissing('users', [
             'email' => 'hack@example.com',
-            'role' => UserRole::User->value,
         ]);
     }
 }

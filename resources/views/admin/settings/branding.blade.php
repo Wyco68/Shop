@@ -58,6 +58,10 @@
         </form>
     </x-admin.card>
 
-    <p class="text-xs text-slate-500">Administrator passwords are managed only via CLI: <code class="bg-slate-100 px-1 rounded">php artisan admin:change-password</code></p>
+    <p class="text-xs text-slate-500">
+        Administrator passwords:
+        <a href="{{ route('admin.settings.security.edit') }}" class="text-sky-600 hover:underline font-medium">Security settings</a>
+        or CLI <code class="bg-slate-100 px-1 rounded">php artisan admin:change-password</code>
+    </p>
 </div>
 @endsection

@@ -105,13 +105,13 @@ Then continue with `./vendor/bin/sail up -d`. After Sail is up, prefer `./vendor
 
 ## Admin Setup
 
-- Run: `./vendor/bin/sail artisan app:init-admin` (prompts for shop name and base currency)
-- Or visit `/setup` once before any admin exists (store name, **base currency** (ISO code, symbol, position), and admin; 404 after first admin).
-- **Currency is set once** during setup (or `app:init-admin`), then `currency_locked` prevents changes via admin/API. Emergency override: `./vendor/bin/sail artisan currency:force-change` (interactive confirmation, logged).
+- After `migrate`, visit **`/setup`** once (no admin exists yet). Configure store name, **base currency** (ISO code, symbol, position), and the first administrator account. `/setup` returns 404 after the first admin is created.
+- Until setup completes, the app redirects all visitors to `/setup` (no auto-created admin).
+- **Currency is set once** during setup, then `currency_locked` prevents changes via admin/API. Emergency override: `./vendor/bin/sail artisan currency:force-change` (interactive confirmation, logged).
 - Password: 12+ chars with mixed case, numbers, and symbols.
 - No demo users or catalog seed data.
 - Add **payment methods** in admin before checkout works.
-- Admin password changes: CLI only — `./vendor/bin/sail artisan admin:change-password` (no admin account UI).
+- Admin password changes: **Admin → Security** (re-authentication required) or CLI — `./vendor/bin/sail artisan admin:change-password`.
 
 ## Testing
 
@@ -127,7 +127,7 @@ Deploy on **Render** with the Pro blueprint in [`render.yaml`](render.yaml) (web
 2. Render → **New** → **Blueprint** → connect the repo.
 3. Set secrets: `APP_URL`, `REDIS_URL`, `PUSHER_*`, `VITE_PUSHER_*`, `AWS_*` (S3 uploads), and a **new** `APP_KEY` from `./vendor/bin/sail artisan key:generate --show` (production-only; never reuse local).
 4. Deploy (migrations run on start; no seeders).
-5. Create the first admin once: `./vendor/bin/sail artisan app:init-admin` (Render shell) or `/setup`.
+5. Open **`/setup`** once to configure the store and create the first administrator.
 
 Production env template: [`.env.render.example`](.env.render.example).
 
