@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,8 +33,9 @@ class ProfileUpdateRequest extends FormRequest
             'address'   => ['nullable', 'string', 'max:255'],
         ];
 
-        if (! $this->user()->isAdmin()) {
-            $rules['password'] = ['nullable', 'string', 'min:8', 'confirmed'];
+        if (! $this->user()->isAdmin() && $this->filled('password')) {
+            $rules['current_password'] = ['required', 'current_password'];
+            $rules['password'] = PasswordRules::validationRules();
         }
 
         return $rules;

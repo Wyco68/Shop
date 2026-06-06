@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Notifications\PasswordChangedNotification;
+use App\Services\UserPasswordService;
 use App\Support\PasswordRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class PasswordController extends Controller
 {
+    public function __construct(
+        private readonly UserPasswordService $passwords,
+    ) {}
     /**
      * Update the user's password.
      */
@@ -27,11 +29,11 @@ class PasswordController extends Controller
             'password' => PasswordRules::validationRules(),
         ]);
 
-        $request->user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        $request->user()->notify(new PasswordChangedNotification);
+        $this->passwords->updatePassword(
+            $request->user(),
+            $validated['password'],
+            $validated['current_password'],
+        );
 
         return back()->with('status', 'password-updated');
     }

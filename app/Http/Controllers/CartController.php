@@ -22,11 +22,16 @@ class CartController extends Controller
     {
         $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:'.CartService::MAX_LINE_QUANTITY],
         ]);
 
         $cart = $this->cartService->getOrCreateCart($request->user());
-        $this->cartService->addItem($cart, $request->integer('variant_id'), $request->integer('quantity'));
+
+        try {
+            $this->cartService->addItem($cart, $request->integer('variant_id'), $request->integer('quantity'));
+        } catch (\RuntimeException $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
 
         return redirect()->route('cart.index')->with('success', 'Item added to cart.');
     }
@@ -35,11 +40,16 @@ class CartController extends Controller
     {
         $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:'.CartService::MAX_LINE_QUANTITY],
         ]);
 
         $cart = $this->cartService->getOrCreateCart($request->user());
-        $this->cartService->updateQuantity($cart, $request->integer('variant_id'), $request->integer('quantity'));
+
+        try {
+            $this->cartService->updateQuantity($cart, $request->integer('variant_id'), $request->integer('quantity'));
+        } catch (\RuntimeException $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
 
         return redirect()->route('cart.index');
     }

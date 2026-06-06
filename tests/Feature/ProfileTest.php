@@ -4,11 +4,20 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bootstrapStore();
+    }
 
     public function test_profile_page_is_displayed(): void
     {
@@ -83,6 +92,48 @@ class ProfileTest extends TestCase
 
         $this->assertGuest();
         $this->assertNull($user->fresh());
+    }
+
+    public function test_user_can_change_password_with_current_password(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => $user->name,
+                'email' => $user->email,
+                'current_password' => 'Password1!Secure',
+                'password' => 'NewPassword2@Secure',
+                'password_confirmation' => 'NewPassword2@Secure',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $this->assertTrue(
+            \Illuminate\Support\Facades\Hash::check('NewPassword2@Secure', $user->fresh()->password)
+        );
+    }
+
+    public function test_password_change_requires_current_password(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/profile')
+            ->patch('/profile', [
+                'name' => $user->name,
+                'email' => $user->email,
+                'password' => 'NewPassword2@Secure',
+                'password_confirmation' => 'NewPassword2@Secure',
+            ]);
+
+        $response
+            ->assertSessionHasErrors('current_password')
+            ->assertRedirect('/profile');
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

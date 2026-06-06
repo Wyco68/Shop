@@ -67,7 +67,8 @@ Route::middleware(['auth', 'redirect_admin'])->group(function () {
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
         ->name('password.confirm');
 
-    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store'])
+        ->middleware('throttle:confirm-password');
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 });

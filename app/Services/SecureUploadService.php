@@ -15,6 +15,10 @@ class SecureUploadService
 
     public const MAX_QR_KB = 2048;
 
+    public const MAX_PRODUCT_IMAGE_KB = 2048;
+
+    public const MAX_PAYMENT_PROOF_KB = 5120;
+
     /**
      * @param  list<string>  $allowedMimes
      */
@@ -104,6 +108,22 @@ class SecureUploadService
             'image/jpeg',
             'image/webp',
             'image/gif',
+        ];
+    }
+
+    /** @return list<string> */
+    public static function productImageMimes(): array
+    {
+        return self::categoryIconMimes();
+    }
+
+    /** @return list<string> */
+    public static function paymentProofMimes(): array
+    {
+        return [
+            'image/png',
+            'image/jpeg',
+            'image/webp',
         ];
     }
 }

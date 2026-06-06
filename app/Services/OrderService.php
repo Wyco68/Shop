@@ -68,6 +68,8 @@ class OrderService
         ?string $notes = null,
     ): Order {
         $order = DB::transaction(function () use ($user, $cart, $paymentMethodId, $notes) {
+            $this->cartService->validateCartForCheckout($cart);
+
             $summary = $this->cartService->getCartSummary($cart);
 
             if (empty($summary['items'])) {

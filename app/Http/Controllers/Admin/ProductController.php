@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Models\Inventory;
+use App\Services\SecureUploadService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use App\Support\StoreCache;
@@ -14,6 +15,10 @@ use App\Support\StoreCache;
 class ProductController extends Controller
 {
     use AuthorizesRequests;
+
+    public function __construct(
+        private readonly SecureUploadService $uploads,
+    ) {}
 
     public function index(Request $request)
     {
@@ -48,14 +53,23 @@ class ProductController extends Controller
             'description'   => 'required|string',
             'base_price'    => 'required|numeric|min:0',
             'category_id'   => 'required|exists:categories,id',
-            'image'         => 'nullable|image|max:2048',
+            'image'         => ['nullable', 'file', 'max:'.SecureUploadService::MAX_PRODUCT_IMAGE_KB],
             'sku'           => 'required|string|unique:product_variants,sku',
             'initial_stock' => 'required|integer|min:0',
         ]);
 
         $data = $request->only('name', 'description', 'base_price', 'category_id');
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', config('filesystems.product_disk', 'public'));
+            try {
+                $path = $this->uploads->storeImage(
+                    $request->file('image'),
+                    'products',
+                    SecureUploadService::productImageMimes(),
+                    SecureUploadService::MAX_PRODUCT_IMAGE_KB,
+                );
+            } catch (\InvalidArgumentException $e) {
+                return back()->withInput()->with('error', $e->getMessage());
+            }
             $data['images'] = [$path];
         }
 
@@ -97,13 +111,25 @@ class ProductController extends Controller
             'description' => 'required|string',
             'base_price'  => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
-            'image'       => 'nullable|image|max:2048',
+            'image'       => ['nullable', 'file', 'max:'.SecureUploadService::MAX_PRODUCT_IMAGE_KB],
             'is_active'   => 'boolean',
         ]);
 
         $data = $request->only('name', 'description', 'base_price', 'category_id', 'is_active');
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', config('filesystems.product_disk', 'public'));
+            try {
+                if ($product->image_path) {
+                    $this->uploads->deleteIfExists($product->image_path);
+                }
+                $path = $this->uploads->storeImage(
+                    $request->file('image'),
+                    'products',
+                    SecureUploadService::productImageMimes(),
+                    SecureUploadService::MAX_PRODUCT_IMAGE_KB,
+                );
+            } catch (\InvalidArgumentException $e) {
+                return back()->withInput()->with('error', $e->getMessage());
+            }
             $data['images'] = [$path];
         }
 

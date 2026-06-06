@@ -1,5 +1,8 @@
-# Quick local stack: app + MySQL + Redis
+# Quick local stack: app + MySQL + Redis (development only)
 # Usage: docker compose -f docker/docker-compose.yml up
+#
+# Security: APP_DEBUG=true and exposed MySQL/Redis ports are intentional for local dev.
+# Never deploy this compose file to production as-is. Use render.yaml / private networking.
 
 services:
   app:

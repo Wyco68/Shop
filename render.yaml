@@ -1,5 +1,6 @@
 # Render Blueprint — production template (Pro web + worker + MySQL + Redis)
-# Docs: README.md → Deployment
+# Docs: README.md → Deployment, Production Security Checklist
+# APP_DEBUG=false below is required — never set true in production.
 
 databases:
   - name: ecommerce-mysql

@@ -5,18 +5,26 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class PasswordUpdateTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
 
     private const PASSWORD = 'Password1!Secure';
     private const NEW_PASSWORD = 'NewPassword1!Secure';
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bootstrapStore();
+    }
+
     public function test_password_can_be_updated(): void
     {
-        User::factory()->admin()->create();
         $user = User::factory()->create();
 
         $response = $this
@@ -37,7 +45,6 @@ class PasswordUpdateTest extends TestCase
 
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
-        User::factory()->admin()->create();
         $user = User::factory()->create();
 
         $response = $this

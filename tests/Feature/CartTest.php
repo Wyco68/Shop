@@ -9,11 +9,20 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class CartTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bootstrapStore();
+    }
 
     private function createVariantWithStock(int $stock = 50): ProductVariant
     {
@@ -130,5 +139,114 @@ class CartTest extends TestCase
     public function test_guest_cannot_access_cart_page(): void
     {
         $this->get('/cart')->assertRedirect('/login');
+    }
+
+    public function test_cannot_add_inactive_product_to_cart(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->createVariantWithStock();
+        $variant->product->update(['is_active' => false]);
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+
+        $this->expectException(\RuntimeException::class);
+        $cartService->addItem($cart, $variant->id, 1);
+    }
+
+    public function test_cannot_add_inactive_variant_to_cart(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->createVariantWithStock();
+        $variant->update(['is_active' => false]);
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+
+        $this->expectException(\RuntimeException::class);
+        $cartService->addItem($cart, $variant->id, 1);
+    }
+
+    public function test_cannot_add_soft_deleted_product_to_cart(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->createVariantWithStock();
+        $variant->product->delete();
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+
+        $this->expectException(\RuntimeException::class);
+        $cartService->addItem($cart, $variant->id, 1);
+    }
+
+    public function test_cart_summary_removes_unavailable_items(): void
+    {
+        $user = User::factory()->create();
+        $available = $this->createVariantWithStock();
+        $unavailable = $this->createVariantWithStock();
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+        $cartService->addItem($cart, $available->id, 2);
+        $cartService->addItem($cart, $unavailable->id, 1);
+
+        $unavailable->product->update(['is_active' => false]);
+
+        $summary = $cartService->getCartSummary($cart);
+
+        $this->assertCount(1, $summary['items']);
+        $this->assertEquals($available->id, $summary['items'][0]['variant']->id);
+        $this->assertDatabaseMissing('cart_items', [
+            'cart_id' => $cart->id,
+            'variant_id' => $unavailable->id,
+        ]);
+    }
+
+    public function test_cart_quantity_is_capped_to_available_stock(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->createVariantWithStock(3);
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+        $cartService->addItem($cart, $variant->id, 10);
+
+        $this->assertDatabaseHas('cart_items', [
+            'cart_id' => $cart->id,
+            'variant_id' => $variant->id,
+            'quantity' => 3,
+        ]);
+    }
+
+    public function test_cart_quantity_cannot_exceed_max_line_quantity(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->createVariantWithStock(200);
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+        $cartService->addItem($cart, $variant->id, 150);
+
+        $this->assertDatabaseHas('cart_items', [
+            'cart_id' => $cart->id,
+            'variant_id' => $variant->id,
+            'quantity' => CartService::MAX_LINE_QUANTITY,
+        ]);
+    }
+
+    public function test_checkout_rejects_cart_with_deactivated_product(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->createVariantWithStock();
+
+        $cartService = app(CartService::class);
+        $cart = $cartService->getOrCreateCart($user);
+        $cartService->addItem($cart, $variant->id, 1);
+
+        $variant->product->update(['is_active' => false]);
+
+        $this->expectException(\RuntimeException::class);
+        $cartService->validateCartForCheckout($cart);
     }
 }

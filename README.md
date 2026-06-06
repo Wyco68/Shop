@@ -115,9 +115,19 @@ Then continue with `./vendor/bin/sail up -d`. After Sail is up, prefer `./vendor
 
 ## Testing
 
+Run the suite **inside Sail** (recommended). Host `php artisan test` requires the `pdo_mysql` PHP extension and a reachable MySQL instance matching `.env`:
+
 ```bash
-./vendor/bin/sail test
+./vendor/bin/sail artisan test
 ```
+
+Filter examples:
+
+```bash
+./vendor/bin/sail artisan test --filter=CartTest
+```
+
+**Host PHP without Sail:** install `php-mysql` (Ubuntu/WSL: `sudo apt install php-mysql`) and ensure `DB_HOST`/`DB_PORT` point at a running MySQL. Otherwise every feature test fails with `could not find driver`.
 
 ## Deployment
 
@@ -132,3 +142,19 @@ Deploy on **Render** with the Pro blueprint in [`render.yaml`](render.yaml) (web
 Production env template: [`.env.render.example`](.env.render.example).
 
 Required production drivers: `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`, `BROADCAST_CONNECTION=pusher`, plus a queue worker (included in the blueprint).
+
+## Production Security Checklist
+
+Complete **before** exposing the app to the public internet:
+
+| Item | Local (`.env.example`) | Production |
+|------|------------------------|------------|
+| `APP_DEBUG` | `true` (dev only) | **`false`** — never enable in production |
+| `APP_KEY` | Generate per machine | **Unique** key per environment (never copy from local) |
+| `LOG_LEVEL` | `debug` | `info`, `warning`, or `error` |
+| Admin bootstrap | Visit `/setup` once | Complete `/setup` **before** DNS goes live |
+| Database / Redis | Forwarded ports OK locally | **Private network only** — do not expose `3306`/`6379` publicly |
+| Reverse proxy | Optional locally | Terminate TLS at edge; restrict `trustProxies` to real proxy IPs |
+| `.env` | Gitignored | Store secrets in host dashboard only — never commit |
+
+Templates: [`.env.example`](.env.example) (local), [`.env.render.example`](.env.render.example) (production).

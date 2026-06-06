@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class CartService
 {
+    public const MAX_LINE_QUANTITY = 99;
+
     public function getOrCreateCart(?User $user, ?string $sessionId = null): Cart
     {
         if ($user) {
@@ -21,29 +23,36 @@ class CartService
 
     public function addItem(Cart $cart, int $variantId, int $quantity = 1): CartItem
     {
+        $variant = $this->resolvePurchasableVariant($variantId);
+
         $item = CartItem::where('cart_id', $cart->id)
             ->where('variant_id', $variantId)
             ->first();
 
+        $newQuantity = $this->capLineQuantity($variant, ($item?->quantity ?? 0) + $quantity);
+
         if ($item) {
-            $item->increment('quantity', $quantity);
+            $item->update(['quantity' => $newQuantity]);
+
             return $item->fresh();
         }
 
         return CartItem::create([
             'cart_id' => $cart->id,
             'variant_id' => $variantId,
-            'quantity' => $quantity,
+            'quantity' => $newQuantity,
         ]);
     }
 
     public function updateQuantity(Cart $cart, int $variantId, int $quantity): CartItem
     {
+        $variant = $this->resolvePurchasableVariant($variantId);
+
         $item = CartItem::where('cart_id', $cart->id)
             ->where('variant_id', $variantId)
             ->firstOrFail();
 
-        $item->update(['quantity' => $quantity]);
+        $item->update(['quantity' => $this->capLineQuantity($variant, $quantity)]);
 
         return $item->fresh();
     }
@@ -71,17 +80,32 @@ class CartService
 
         DB::transaction(function () use ($userCart, $guestCart) {
             foreach ($guestCart->items as $guestItem) {
+                if (! $this->isVariantPurchasable($guestItem->variant_id)) {
+                    continue;
+                }
+
                 $existing = $userCart->items()
                     ->where('variant_id', $guestItem->variant_id)
                     ->first();
 
+                $variant = ProductVariant::with(['product', 'inventory'])->find($guestItem->variant_id);
+
+                if (! $variant) {
+                    continue;
+                }
+
+                $mergedQuantity = $this->capLineQuantity(
+                    $variant,
+                    ($existing?->quantity ?? 0) + $guestItem->quantity,
+                );
+
                 if ($existing) {
-                    $existing->increment('quantity', $guestItem->quantity);
+                    $existing->update(['quantity' => $mergedQuantity]);
                 } else {
                     CartItem::create([
                         'cart_id' => $userCart->id,
                         'variant_id' => $guestItem->variant_id,
-                        'quantity' => $guestItem->quantity,
+                        'quantity' => $mergedQuantity,
                     ]);
                 }
             }
@@ -93,8 +117,36 @@ class CartService
         return $userCart->fresh(['items.variant.product']);
     }
 
+    /**
+     * Reject checkout when the cart contains inactive, archived, or missing variants.
+     *
+     * @throws \RuntimeException
+     */
+    public function validateCartForCheckout(Cart $cart): void
+    {
+        $cart->load('items.variant.product', 'items.variant.inventory');
+
+        foreach ($cart->items as $cartItem) {
+            if (! $cartItem->variant) {
+                throw new \RuntimeException('Your cart contains an item that is no longer available.');
+            }
+
+            $this->assertVariantPurchasable($cartItem->variant);
+
+            $maxAllowed = min(self::MAX_LINE_QUANTITY, $cartItem->variant->available_stock);
+
+            if ($cartItem->quantity > $maxAllowed) {
+                throw new \RuntimeException(
+                    "Only {$maxAllowed} of {$cartItem->variant->product->name} are available."
+                );
+            }
+        }
+    }
+
     public function getCartSummary(Cart $cart): array
     {
+        $this->removeUnavailableItems($cart);
+
         $cart->load('items.variant.product.discounts', 'items.variant.inventory');
 
         $items = [];
@@ -134,6 +186,72 @@ class CartService
             'discount_total' => $discountTotal,
             'total' => $subtotal - $discountTotal,
         ];
+    }
+
+    public function resolvePurchasableVariant(int $variantId): ProductVariant
+    {
+        $variant = ProductVariant::with(['product', 'inventory'])->find($variantId);
+
+        if (! $variant) {
+            throw new \RuntimeException('This product is no longer available.');
+        }
+
+        $this->assertVariantPurchasable($variant);
+
+        return $variant;
+    }
+
+    public function isVariantPurchasable(int $variantId): bool
+    {
+        $variant = ProductVariant::with(['product', 'inventory'])->find($variantId);
+
+        if (! $variant) {
+            return false;
+        }
+
+        try {
+            $this->assertVariantPurchasable($variant);
+        } catch (\RuntimeException) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function removeUnavailableItems(Cart $cart): void
+    {
+        $cart->loadMissing('items.variant.product');
+
+        foreach ($cart->items as $cartItem) {
+            if (! $cartItem->variant || ! $this->isVariantPurchasable($cartItem->variant_id)) {
+                $cartItem->delete();
+            }
+        }
+    }
+
+    private function capLineQuantity(ProductVariant $variant, int $requestedQuantity): int
+    {
+        $stockCap = $variant->available_stock;
+        $maxAllowed = min(self::MAX_LINE_QUANTITY, $stockCap);
+
+        if ($maxAllowed <= 0) {
+            throw new \RuntimeException('This item is out of stock.');
+        }
+
+        return min($requestedQuantity, $maxAllowed);
+    }
+
+    private function assertVariantPurchasable(ProductVariant $variant): void
+    {
+        $product = $variant->product;
+
+        if (! $product || $product->trashed()) {
+            throw new \RuntimeException('This product is no longer available.');
+        }
+
+        if (! $product->is_active || ! $variant->is_active) {
+            throw new \RuntimeException("{$product->name} is no longer available for purchase.");
+        }
     }
 
     private function calculateDiscount($product, int $quantity, float $unitPrice): array

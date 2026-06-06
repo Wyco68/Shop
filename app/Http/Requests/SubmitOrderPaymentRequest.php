@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\SecureUploadService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubmitOrderPaymentRequest extends FormRequest
@@ -16,7 +17,12 @@ class SubmitOrderPaymentRequest extends FormRequest
         return [
             'phone_num' => ['required', 'string', 'max:20'],
             'address' => ['required', 'string', 'max:500'],
-            'payment_proof' => ['required', 'image', 'max:5120'],
+            'payment_proof' => [
+                'required',
+                'file',
+                'max:'.SecureUploadService::MAX_PAYMENT_PROOF_KB,
+                'mimetypes:'.implode(',', SecureUploadService::paymentProofMimes()),
+            ],
         ];
     }
 

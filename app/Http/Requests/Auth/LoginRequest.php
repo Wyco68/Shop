@@ -70,6 +70,19 @@ class LoginRequest extends FormRequest
             ])->errorBag('unverified');
         }
 
+        if ($user instanceof User && ! $user->is_active) {
+            Auth::logout();
+
+            AuthSecurityLogger::log('inactive_account_login_attempt', [
+                'email' => $user->email,
+                'user_id' => $user->id,
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => 'This account has been deactivated. Please contact support.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

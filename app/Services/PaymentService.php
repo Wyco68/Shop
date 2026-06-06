@@ -6,12 +6,13 @@ use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 
 class PaymentService
 {
     public function __construct(
         private readonly OrderService $orderService,
+        private readonly SecureUploadService $uploads,
     ) {}
 
     public function initiatePayment(Order $order, ?string $provider = null): Payment
@@ -40,7 +41,17 @@ class PaymentService
             throw new \RuntimeException('This payment proof has already been submitted for another order.');
         }
 
-        $path = $file->store('payment-proofs', config('filesystems.private_disk', 'private'));
+        try {
+            $path = $this->uploads->storeImage(
+                $file,
+                'payment-proofs',
+                SecureUploadService::paymentProofMimes(),
+                SecureUploadService::MAX_PAYMENT_PROOF_KB,
+                config('filesystems.private_disk', 'private'),
+            );
+        } catch (InvalidArgumentException $e) {
+            throw new \RuntimeException($e->getMessage());
+        }
 
         $payment->update([
             'proof_path' => $path,

@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\UserPasswordService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly UserPasswordService $passwords,
+    ) {}
     /**
      * Display the user's profile form.
      */
@@ -35,14 +38,12 @@ class ProfileController extends Controller
                 ->with('error', 'Administrator passwords must be changed from Admin → Security.');
         }
 
-        if (! empty($validated['password'] ?? null)) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
+        $plainPassword = $validated['password'] ?? null;
+        $currentPassword = $validated['current_password'] ?? null;
+        unset($validated['password'], $validated['current_password'], $validated['password_confirmation']);
 
         $request->user()->fill(collect($validated)->only([
-            'name', 'email', 'phone_num', 'address', 'password',
+            'name', 'email', 'phone_num', 'address',
         ])->all());
 
         if ($request->user()->isDirty('email')) {
@@ -50,6 +51,14 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+
+        if ($plainPassword && $currentPassword) {
+            $this->passwords->updatePassword(
+                $request->user(),
+                $plainPassword,
+                $currentPassword,
+            );
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
