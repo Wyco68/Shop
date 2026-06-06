@@ -31,6 +31,59 @@ class AdminPasswordService
         return $admin;
     }
 
+    /**
+     * Set the login (email + password) for the shared/demo admin account —
+     * the one handed out publicly for testing. Never touches the owner
+     * account. CLI-only, bypasses the web-change/cooldown restrictions that
+     * exist specifically to stop testers from doing this themselves.
+     */
+    public function setDemoLoginCredentials(string $email, string $plainPassword, string $channel = 'cli'): User
+    {
+        $admin = $this->findDemoAdmin();
+
+        $this->validatePasswordStrength($plainPassword);
+
+        $email = strtolower(trim($email));
+
+        $emailTaken = User::query()
+            ->where('email', $email)
+            ->where('id', '!=', $admin->id)
+            ->exists();
+
+        if ($emailTaken) {
+            throw ValidationException::withMessages([
+                'email' => ['That email is already in use by another account.'],
+            ]);
+        }
+
+        $admin->forceFill([
+            'email' => $email,
+            'password' => Hash::make($plainPassword),
+            'remember_token' => Str::random(60),
+            'email_verified_at' => now(),
+        ])->save();
+
+        $this->recordChange($admin, $channel);
+
+        return $admin;
+    }
+
+    private function findDemoAdmin(): User
+    {
+        $admin = User::query()
+            ->where('role', UserRole::Admin->value)
+            ->where('is_owner', false)
+            ->first();
+
+        if (! $admin) {
+            throw ValidationException::withMessages([
+                'email' => ['No shared/demo administrator exists yet. Run `php artisan store:setup` first.'],
+            ]);
+        }
+
+        return $admin;
+    }
+
     public function changePasswordForAuthenticatedAdmin(User $admin, string $currentPassword, string $newPassword): User
     {
         if (! $admin->isAdmin()) {

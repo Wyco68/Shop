@@ -118,5 +118,19 @@ Artisan::command('admin:change-password', function (AdminPasswordService $passwo
     return self::SUCCESS;
 })->purpose('Change an administrator password (CLI only)');
 
+Artisan::command('admin:set-demo-login {email} {password}', function (string $email, string $password, AdminPasswordService $passwords) {
+    try {
+        $admin = $passwords->setDemoLoginCredentials($email, $password, 'cli');
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        error($e->getMessage());
+
+        return self::FAILURE;
+    }
+
+    info("Shared/demo admin login updated: {$admin->email}");
+
+    return self::SUCCESS;
+})->purpose('Set the shared/demo admin login email + password (CLI only)');
+
 Schedule::command('notifications:prune-read')->daily();
 Schedule::command('demo:sweep-sessions')->everyMinute();
