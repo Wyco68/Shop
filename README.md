@@ -1,79 +1,35 @@
-# E-Commerce Platform Template
+# Car Parts E-Commerce Platform
 
 ## Overview
 
-- Laravel e-commerce starter for any product-based store.
+- Laravel e-commerce starter for car parts stores.
 - Catalog with variants, inventory, cart, and pay-by-transfer checkout with proof verification.
 - Admin dashboard and real-time notifications.
 - Empty database after migrate — configure catalog and payment methods in admin.
 
 ## Tech Stack
 
-- Laravel 11, PHP 8.4, MySQL 8
+- Laravel 12, PHP 8.4, MySQL 8
 - Redis (sessions, cache, queues)
 - Blade, Tailwind CSS v4, Alpine.js
 - Pusher Channels + Laravel Echo
 - Laravel Sail (Docker)
 
+## Prerequisites
+
+**Git** and **Docker Desktop** — that's all. No PHP, Composer, or Node required on your host machine.
+
+> **Windows users:** run all commands inside **WSL 2** (Linux filesystem, e.g. `~/projects/carPart`). Do not clone into `C:\` and run from CMD/PowerShell.
+
 ## Quick Start
 
-1. Clone and enter the project:
+### 1. Clone
 
 ```bash
-git clone <repo-url> ecommerce && cd ecommerce
+git clone <repo-url> carPart && cd carPart
 ```
 
-2. Copy env and install PHP dependencies (requires **PHP 8.2+** and **Composer** on your machine, or use the Docker option in Troubleshooting):
-
-```bash
-cp .env.example .env
-composer install --no-interaction
-```
-
-3. Start Sail, generate `APP_KEY`, and migrate:
-
-```bash
-./vendor/bin/sail up -d
-./vendor/bin/sail artisan key:generate
-./vendor/bin/sail artisan migrate
-```
-
-`key:generate` writes a unique `APP_KEY=base64:…` into `.env`. **Do not commit `.env`.** Use a separate key for each machine (local, staging, production).
-
-To print a key without saving (e.g. Render secrets):
-
-```bash
-./vendor/bin/sail artisan key:generate --show
-```
-
-Paste the full line into your host’s env UI (no quotes). Production template: [`.env.render.example`](.env.render.example).
-
-4. Build frontend assets:
-
-```bash
-npm ci && npm run build
-```
-
-5. Open `http://localhost` (`APP_URL` in `.env`).
-
-**Tests:** `./vendor/bin/sail artisan test` uses a temporary in-app key when `.env` has no `APP_KEY`; you do not need to set one only for PHPUnit.
-
-`.env.example` uses `DB_HOST=mysql` and `REDIS_HOST=redis` for Sail. Do not use `127.0.0.1` for those hosts inside Docker.
-
-### Troubleshooting
-
-#### `composer install` fails (first clone)
-
-| Symptom | Fix |
-|---------|-----|
-| `composer: command not found` | Install Composer: [getcomposer.org](https://getcomposer.org/download/). On Ubuntu/WSL: `sudo apt install composer` or use the Docker install below. |
-| `php: command not found` or PHP below 8.2 | Install PHP 8.2+ (8.4 recommended). Ubuntu/WSL: `sudo apt install php-cli php-mbstring php-xml php-curl php-zip php-bcmath php-tokenizer unzip git` |
-| Missing PHP extension (`ext-*`) | Install the matching package (e.g. `php-mbstring`, `php-xml`, `php-curl`, `php-zip`) and run `composer install` again. |
-| `Your requirements could not be resolved` | Update Composer: `composer self-update`, then retry. Ensure you are in the project root (folder with `composer.json`). |
-| Prompt about `allow-plugins` | Run `composer install --no-interaction` or answer `yes` when asked to trust plugins. |
-| Runs out of memory | `COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction` |
-| Slow or SSL errors on Windows | Clone and run commands inside **WSL** (Linux filesystem, e.g. `~/projects/ecommerce`), not from `C:\` via CMD. |
-| No local PHP (Docker only) | From the project root, install vendors with Sail’s Composer image (Docker must be running): |
+### 2. Bootstrap PHP vendor (one-time, Docker only — no local PHP needed)
 
 ```bash
 docker run --rm \
@@ -84,38 +40,147 @@ docker run --rm \
   composer install --ignore-platform-reqs --no-interaction
 ```
 
-Then continue with `./vendor/bin/sail up -d`. After Sail is up, prefer `./vendor/bin/sail composer …` instead of host `composer`.
+This pulls the official Sail Composer image and installs `vendor/` inside your project. After this, you never need host PHP or Composer again — all further commands go through Sail.
 
-#### `APP_KEY` / sessions (419 errors)
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+`.env.example` is pre-configured for Sail (`DB_HOST=mysql`, `REDIS_HOST=redis`). No edits needed to boot locally.
+
+### 4. Start services
+
+```bash
+./vendor/bin/sail up -d
+```
+
+Starts app (PHP 8.4), MySQL 8, and Redis in the background. First run pulls images (~1–2 min).
+
+### 5. Generate app key
+
+```bash
+./vendor/bin/sail artisan key:generate
+```
+
+Writes a unique `APP_KEY=base64:…` into `.env`. **Never commit `.env`.** Generate a separate key for each environment (local, staging, production).
+
+To print the key without saving (e.g. for Render secrets):
+
+```bash
+./vendor/bin/sail artisan key:generate --show
+```
+
+Paste the full `base64:…` line into your host's env dashboard (no quotes).
+
+### 6. Run migrations
+
+```bash
+./vendor/bin/sail artisan migrate
+```
+
+### 7. Build frontend assets
+
+For a one-time production build:
+
+```bash
+./vendor/bin/sail npm ci
+./vendor/bin/sail npm run build
+```
+
+For live HMR during development:
+
+```bash
+./vendor/bin/sail npm run dev
+```
+
+### 8. Open the setup page
+
+Visit **[http://localhost/setup](http://localhost/setup)** to configure the store and create the first administrator account.
+
+---
+
+## Useful Sail Commands
+
+```bash
+# Stop services
+./vendor/bin/sail down
+
+# Tail logs
+./vendor/bin/sail logs -f
+
+# Run Artisan
+./vendor/bin/sail artisan <command>
+
+# Run Composer
+./vendor/bin/sail composer <command>
+
+# Run NPM
+./vendor/bin/sail npm <command>
+
+# Open a shell inside the container
+./vendor/bin/sail shell
+
+# Run tests
+./vendor/bin/sail artisan test
+```
+
+You can add a shell alias to shorten the command:
+
+```bash
+alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'
+```
+
+---
+
+## Troubleshooting
+
+### Vendor bootstrap fails
 
 | Symptom | Fix |
 |---------|-----|
-| `No application encryption key` / 419 on forms | Run `./vendor/bin/sail artisan key:generate` and confirm `.env` has `APP_KEY=base64:…` (not empty). |
+| `docker: command not found` | Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and ensure it is running. |
+| `permission denied` on `/var/www/html` | On Linux, confirm `id -u` is not 0 (root). Run as your normal user. |
+| Runs out of memory | `COMPOSER_MEMORY_LIMIT=-1 docker run … composer install …` |
+| Slow or SSL errors on Windows | Run inside **WSL 2** on the Linux filesystem, not from `C:\`. |
+
+### `APP_KEY` / sessions (419 errors)
+
+| Symptom | Fix |
+|---------|-----|
+| `No application encryption key` / 419 on forms | Run `./vendor/bin/sail artisan key:generate` and confirm `.env` has `APP_KEY=base64:…`. |
 | Key set but 419 persists | `./vendor/bin/sail artisan optimize:clear`, restart Sail, hard-refresh the browser. |
-| Copied key to Render/hosting | Use `php artisan key:generate --show` locally; paste **one** line, include the `base64:` prefix, no quotes. Generate a **new** key for production — do not reuse your local key. |
-| Accidentally committed a key | Rotate: generate a new key, update `.env`/host secrets, run `optimize:clear`, invalidate user sessions (log in again). |
+| Copied key to Render/hosting | Paste the full `base64:…` line; no quotes. Generate a **new** key for production — never reuse local. |
+| Accidentally committed a key | Rotate: generate a new key, update `.env`/host secrets, run `optimize:clear`, invalidate sessions. |
 
-#### App / Sail
+### App / Sail
 
 | Symptom | Fix |
 |---------|-----|
-| DB/Redis connection refused | Set `DB_HOST=mysql`, `REDIS_HOST=redis` |
-| Port already in use | Raise `FORWARD_DB_PORT` / `FORWARD_REDIS_PORT` in `.env` |
-| No live notifications locally | Set Pusher vars or `BROADCAST_CONNECTION=log` |
+| DB/Redis connection refused | Confirm `DB_HOST=mysql` and `REDIS_HOST=redis` in `.env` (not `127.0.0.1`). |
+| Port `80` or `3306` already in use | Set `APP_PORT`, `FORWARD_DB_PORT`, or `FORWARD_REDIS_PORT` in `.env` before `sail up`. |
+| `sail up` fails: image not found | Run the Step 2 bootstrap first — `vendor/laravel/sail` must exist. |
+| No live notifications locally | Set Pusher vars in `.env` or use `BROADCAST_CONNECTION=log` for log-only. |
+| Frontend shows blank / missing styles | Run `sail npm ci && sail npm run build` (or `sail npm run dev` for HMR). |
+
+---
 
 ## Admin Setup
 
 - After `migrate`, visit **`/setup`** once (no admin exists yet). Configure store name, **base currency** (ISO code, symbol, position), and the first administrator account. `/setup` returns 404 after the first admin is created.
-- Until setup completes, the app redirects all visitors to `/setup` (no auto-created admin).
+- Until setup completes, the app redirects all visitors to `/setup`.
 - **Currency is set once** during setup, then `currency_locked` prevents changes via admin/API. Emergency override: `./vendor/bin/sail artisan currency:force-change` (interactive confirmation, logged).
 - Password: 12+ chars with mixed case, numbers, and symbols.
 - No demo users or catalog seed data.
 - Add **payment methods** in admin before checkout works.
 - Admin password changes: **Admin → Security** (re-authentication required) or CLI — `./vendor/bin/sail artisan admin:change-password`.
 
+---
+
 ## Testing
 
-Run the suite **inside Sail** (recommended). Host `php artisan test` requires the `pdo_mysql` PHP extension and a reachable MySQL instance matching `.env`:
+Run the suite inside Sail:
 
 ```bash
 ./vendor/bin/sail artisan test
@@ -127,7 +192,9 @@ Filter examples:
 ./vendor/bin/sail artisan test --filter=CartTest
 ```
 
-**Host PHP without Sail:** install `php-mysql` (Ubuntu/WSL: `sudo apt install php-mysql`) and ensure `DB_HOST`/`DB_PORT` point at a running MySQL. Otherwise every feature test fails with `could not find driver`.
+Tests use a separate in-memory SQLite database — they do not touch your local MySQL data.
+
+---
 
 ## Deployment
 
@@ -136,12 +203,16 @@ Deploy on **Render** with the Pro blueprint in [`render.yaml`](render.yaml) (web
 1. Push the repo to GitHub.
 2. Render → **New** → **Blueprint** → connect the repo.
 3. Set secrets: `APP_URL`, `REDIS_URL`, `PUSHER_*`, `VITE_PUSHER_*`, `AWS_*` (S3 uploads), and a **new** `APP_KEY` from `./vendor/bin/sail artisan key:generate --show` (production-only; never reuse local).
-4. Deploy (migrations run on start; no seeders).
+4. Deploy — migrations run on container start; no seeders.
 5. Open **`/setup`** once to configure the store and create the first administrator.
 
 Production env template: [`.env.render.example`](.env.render.example).
 
 Required production drivers: `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`, `BROADCAST_CONNECTION=pusher`, plus a queue worker (included in the blueprint).
+
+The production Docker image is built from [`Dockerfile`](Dockerfile) (root). It is **not** used for local development — Sail uses its own image from `vendor/laravel/sail`.
+
+---
 
 ## Production Security Checklist
 
