@@ -1,0 +1,108 @@
+# Self-hosted VPS production stack: app + queue worker + scheduler + MySQL + Redis + Caddy (TLS).
+# Usage:
+#   cp .env.vps.example .env.vps
+#   # edit .env.vps: set APP_URL, DB_PASSWORD, generate APP_KEY (see README "VPS Deployment")
+#   docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
+x-app-build: &app-build
+  context: .
+  dockerfile: docker/vps/Dockerfile
+  args:
+    VITE_PUSHER_APP_KEY: ${VITE_PUSHER_APP_KEY:-}
+    VITE_PUSHER_APP_CLUSTER: ${VITE_PUSHER_APP_CLUSTER:-mt1}
+    VITE_PUSHER_SCHEME: ${VITE_PUSHER_SCHEME:-https}
+    VITE_APP_NAME: ${VITE_APP_NAME:-E-Commerce}
+
+services:
+  app:
+    image: carpart-app:latest
+    build: *app-build
+    command: ["serve"]
+    env_file: .env.vps
+    volumes:
+      - app-storage:/var/www/html/storage/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    image: carpart-app:latest
+    build: *app-build
+    command: ["worker"]
+    env_file: .env.vps
+    volumes:
+      - app-storage:/var/www/html/storage/app
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    image: carpart-app:latest
+    build: *app-build
+    command: ["scheduler"]
+    env_file: .env.vps
+    volumes:
+      - app-storage:/var/www/html/storage/app
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE:-ecommerce}
+      MYSQL_USER: ${DB_USERNAME:-ecommerce}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./docker/vps/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
+  app-storage:
+  caddy-data:
+  caddy-config:

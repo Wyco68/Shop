@@ -214,6 +214,62 @@ The production Docker image is built from [`Dockerfile`](Dockerfile) (root). It 
 
 ---
 
+## VPS Deployment
+
+Self-hosted stack for a bare VPS (DigitalOcean, Hetzner, etc.) — app + queue worker + scheduler + MySQL + Redis + Caddy, all in Docker. Requires only **Docker Engine** + the **Docker Compose plugin** on the server.
+
+> Starting from a brand-new, unconfigured server (user setup, SSH hardening, firewall, fail2ban, Docker install, backups)? See [`DEPLOYMENT.md`](DEPLOYMENT.md) for the full walkthrough. The steps below assume that part is already done.
+
+1. Clone the repo on the VPS:
+
+   ```bash
+   git clone <repo-url> carPart && cd carPart
+   ```
+
+2. Create the environment file:
+
+   ```bash
+   cp .env.vps.example .env.vps
+   ```
+
+   Edit `.env.vps`: set `DB_PASSWORD`, `APP_URL` (and `SITE_ADDRESS` if you have a domain — DNS must already point at this server for automatic HTTPS).
+
+3. Build the image, then generate a production `APP_KEY` (never reuse one from another environment):
+
+   ```bash
+   docker compose -f docker-compose.vps.yml --env-file .env.vps build
+   docker compose -f docker-compose.vps.yml --env-file .env.vps run --rm app php artisan key:generate --show
+   ```
+
+   Paste the printed `base64:...` value into `APP_KEY=` in `.env.vps`.
+
+4. Start the stack:
+
+   ```bash
+   docker compose -f docker-compose.vps.yml --env-file .env.vps up -d
+   ```
+
+   The `app` container runs migrations and storage setup on boot; `worker` and `scheduler` wait for it to report healthy before starting, so there's no startup race. Uploaded files persist in the `app-storage` volume; the database in `mysql-data`; TLS certificates in `caddy-data`.
+
+5. Open `http://your-ip/setup` (or `https://yourdomain.com/setup`) to configure the store and create the first administrator.
+
+Useful commands:
+
+```bash
+# Tail logs
+docker compose -f docker-compose.vps.yml logs -f
+
+# Run artisan inside the running app container
+docker compose -f docker-compose.vps.yml exec app php artisan <command>
+
+# Rebuild and redeploy after a git pull
+docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
+```
+
+By default uploads are stored on the local `app-storage` volume (`FILESYSTEM_DISK=local`). Set `FILESYSTEM_DISK`/`FILESYSTEM_PRODUCT_DISK`/`FILESYSTEM_PRIVATE_DISK=s3` and fill in `AWS_*` in `.env.vps` to use S3 instead. Real-time notifications need a Pusher account (`PUSHER_*` / `VITE_PUSHER_*`) — set `BROADCAST_CONNECTION=log` to disable them instead.
+
+---
+
 ## Production Security Checklist
 
 Complete **before** exposing the app to the public internet:
