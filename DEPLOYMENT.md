@@ -226,7 +226,10 @@ https://yourdomain.com/setup       (or http://your.server.ip/setup)
 to configure the store and create the first administrator.
 
 **No domain yet?** Leave `SITE_ADDRESS=:80` in `.env.vps` — Caddy serves plain HTTP on port 80 with no
-TLS. Point a domain at the server later, change `SITE_ADDRESS`/`APP_URL` to the domain, and
+TLS. You also need to set `SESSION_SECURE_COOKIE=false` in this case — browsers refuse to store a
+`Secure` cookie over plain HTTP, which would otherwise break the `/setup` form's CSRF token and any
+login. Point a domain at the server later, then change `SITE_ADDRESS`/`APP_URL` to the domain and
+`SESSION_SECURE_COOKIE` back to `true`, and run
 `docker compose -f docker-compose.vps.yml --env-file .env.vps up -d` again to pick it up; Caddy will
 issue a certificate automatically.
 

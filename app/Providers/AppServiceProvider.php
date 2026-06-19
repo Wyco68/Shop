@@ -88,9 +88,16 @@ class AppServiceProvider extends ServiceProvider
         });
 
         if ($this->app->environment('production')) {
-            URL::forceScheme('https');
+            $appUrl = config('app.url');
 
-            if ($appUrl = config('app.url')) {
+            // Only force https when APP_URL actually is https — a VPS with no domain yet
+            // (bare IP, plain HTTP) would otherwise get its own links forced to a scheme
+            // nothing is listening on, breaking the /setup form and every generated URL.
+            if ($appUrl && str_starts_with($appUrl, 'https://')) {
+                URL::forceScheme('https');
+            }
+
+            if ($appUrl) {
                 URL::forceRootUrl($appUrl);
             }
         }
