@@ -1,0 +1,21 @@
+# Railway config-as-code — free-trial-credit-friendly (no Redis, no separate worker service).
+# Reuses the same production Dockerfile/start script as Render (docker/render/start.sh handles
+# both platforms' dynamic-domain env var and APP_KEY normalization).
+#
+# Railway dropped its indefinite free plan in 2023 — new accounts get a one-time trial credit,
+# then it's pay-as-you-go. This config minimizes usage (single service, no Redis/worker) to make
+# that credit last, but it isn't a permanent free tier the way "free" implies elsewhere.
+#
+# Database: Railway supports a one-click MySQL plugin unlike Render. Add one in the Railway
+# dashboard ("+ New" → Database → MySQL) and railway.sh wires its reference variables in for you.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/up"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+numReplicas = 1

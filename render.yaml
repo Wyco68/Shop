@@ -1,18 +1,26 @@
-# Render Blueprint — production template (Pro web + worker + MySQL + Redis)
+# Render Blueprint — FREE TIER template (single free web service, no worker, no managed DB/Redis).
 # Docs: README.md → Deployment, Production Security Checklist
+#
+# Render has no managed MySQL (only Postgres) and no permanent free database, so this blueprint does
+# NOT provision a database — point it at an external MySQL/Postgres you already host (e.g. a free-tier
+# instance from another provider) by filling in DB_* below after the first deploy.
+#
+# Free-tier tradeoffs vs. a paid setup:
+#   - No Redis: SESSION_DRIVER=file, CACHE_STORE=database, QUEUE_CONNECTION=sync (jobs run inline,
+#     in-request, instead of in a background worker).
+#   - No worker service: nothing runs the scheduler (routes/console.php's daily notification prune)
+#     automatically. Trigger it manually (`render run` / dashboard shell) or upgrade to a paid plan
+#     and add a worker/cron service running `php artisan schedule:work`.
+#   - Free web services spin down after inactivity and have ephemeral disk: local file uploads
+#     (FILESYSTEM_DISK=local) are lost on every redeploy. Set FILESYSTEM_DISK/FILESYSTEM_PRODUCT_DISK/
+#     FILESYSTEM_PRIVATE_DISK=s3 and fill in AWS_* if you need uploads to survive redeploys.
 # APP_DEBUG=false below is required — never set true in production.
-
-databases:
-  - name: ecommerce-mysql
-    plan: starter
-    databaseName: ecommerce
-    user: ecommerce
 
 services:
   - type: web
     name: ecommerce-web
     runtime: docker
-    plan: pro
+    plan: free
     region: oregon
     healthCheckPath: /up
     dockerfilePath: ./Dockerfile
@@ -39,44 +47,36 @@ services:
         value: stderr
       - key: LOG_LEVEL
         value: info
+      # External database — Render has no free managed MySQL/Postgres. Set these to your own
+      # MySQL (DB_CONNECTION=mysql, matches the app's installed pdo_mysql driver) or Postgres
+      # (DB_CONNECTION=pgsql) instance.
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        fromDatabase:
-          name: ecommerce-mysql
-          property: host
+        sync: false
       - key: DB_PORT
-        fromDatabase:
-          name: ecommerce-mysql
-          property: port
+        sync: false
       - key: DB_DATABASE
-        fromDatabase:
-          name: ecommerce-mysql
-          property: database
+        sync: false
       - key: DB_USERNAME
-        fromDatabase:
-          name: ecommerce-mysql
-          property: user
+        sync: false
       - key: DB_PASSWORD
-        fromDatabase:
-          name: ecommerce-mysql
-          property: password
-      - key: REDIS_CLIENT
-        value: predis
-      - key: REDIS_URL
         sync: false
       - key: SESSION_DRIVER
-        value: redis
+        value: file
       - key: CACHE_STORE
-        value: redis
+        value: database
       - key: QUEUE_CONNECTION
-        value: redis
+        value: sync
       - key: SESSION_SECURE_COOKIE
         value: "true"
       - key: RENDER
         value: "true"
+      # Real-time notifications disabled by default (no paid add-on required). Pusher has its own
+      # free tier (200k msgs/day) if you want this — set BROADCAST_CONNECTION=pusher and fill in
+      # PUSHER_*/VITE_PUSHER_* below.
       - key: BROADCAST_CONNECTION
-        value: pusher
+        value: log
       - key: PUSHER_APP_ID
         sync: false
       - key: PUSHER_APP_KEY
@@ -97,12 +97,14 @@ services:
         value: https
       - key: VITE_APP_NAME
         value: E-Commerce
+      # Local disk by default — uploads are lost on every redeploy (see note above). Switch to s3
+      # for persistence; AWS S3 has its own free tier for new accounts.
       - key: FILESYSTEM_DISK
-        value: s3
+        value: local
       - key: FILESYSTEM_PRODUCT_DISK
-        value: s3
+        value: public
       - key: FILESYSTEM_PRIVATE_DISK
-        value: s3
+        value: private
       - key: AWS_ACCESS_KEY_ID
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
@@ -113,52 +115,3 @@ services:
         sync: false
       - key: MAIL_MAILER
         value: log
-
-  - type: worker
-    name: ecommerce-worker
-    runtime: docker
-    plan: pro
-    region: oregon
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    dockerCommand: php artisan queue:work redis --sleep=1 --tries=3 --timeout=120
-    autoDeploy: true
-    envVars:
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: APP_KEY
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: DB_CONNECTION
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: DB_HOST
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: DB_PORT
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: DB_DATABASE
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: DB_USERNAME
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: DB_PASSWORD
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: REDIS_URL
-      - fromService:
-          name: ecommerce-web
-          type: web
-          envVarKey: QUEUE_CONNECTION
-      - key: APP_ENV
-        value: production

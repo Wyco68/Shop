@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(bash -n render.sh)",
+      "Bash(bash -n railway.sh)",
+      "Bash(bash -n docker/render/start.sh)",
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('render.yaml'\\)\\); print\\('render.yaml OK'\\)\")",
+      "Bash(python3 -c \"import tomllib; tomllib.load\\(open\\('railway.toml','rb'\\)\\); print\\('railway.toml OK'\\)\")"
     ]
   }
 }

@@ -198,19 +198,33 @@ Tests use a separate in-memory SQLite database — they do not touch your local 
 
 ## Deployment
 
-Deploy on **Render** with the Pro blueprint in [`render.yaml`](render.yaml) (web + worker + MySQL).
+Three deployment targets, all built from the same root [`Dockerfile`](Dockerfile) (not used for local dev — Sail uses its own image from `vendor/laravel/sail`):
 
-1. Push the repo to GitHub.
-2. Render → **New** → **Blueprint** → connect the repo.
-3. Set secrets: `APP_URL`, `REDIS_URL`, `PUSHER_*`, `VITE_PUSHER_*`, `AWS_*` (S3 uploads), and a **new** `APP_KEY` from `./vendor/bin/sail artisan key:generate --show` (production-only; never reuse local).
-4. Deploy — migrations run on container start; no seeders.
-5. Open **`/setup`** once to configure the store and create the first administrator.
+| Target | Cost | Database | Redis | Queue worker | Guide |
+|--------|------|-----------|-------|---------------|-------|
+| Render | Free tier | External (Render has no free managed DB) | None — file sessions, DB cache | None — `QUEUE_CONNECTION=sync` | below |
+| Railway | One-time trial credit, then paid | Railway's MySQL plugin (one-click) | None — same as Render | None — `QUEUE_CONNECTION=sync` | below |
+| Self-hosted VPS | Whatever the VPS costs | Docker Compose MySQL | Docker Compose Redis | Dedicated container | [`DEPLOYMENT.md`](DEPLOYMENT.md) |
 
-Production env template: [`.env.render.example`](.env.render.example).
+### Render (free tier)
 
-Required production drivers: `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`, `BROADCAST_CONNECTION=pusher`, plus a queue worker (included in the blueprint).
+```bash
+./render.sh
+```
 
-The production Docker image is built from [`Dockerfile`](Dockerfile) (root). It is **not** used for local development — Sail uses its own image from `vendor/laravel/sail`.
+Prints a generated `APP_KEY` and the exact list of dashboard secrets to fill in (`APP_URL`, `DB_*` — point at an external MySQL/Postgres, Render doesn't provide one for free), then launches the [`render.yaml`](render.yaml) blueprint if the Render CLI is installed, or walks you through the dashboard flow if not. Env reference: [`.env.render.example`](.env.render.example).
+
+### Railway
+
+```bash
+./railway.sh
+```
+
+Links/creates a Railway project, generates `APP_KEY`, pushes [`.env.railway.example`](.env.railway.example) (copy it to `.env.railway` and edit first) as variables, and deploys via [`railway.toml`](railway.toml). Add Railway's MySQL plugin from the dashboard before running it — see the comment block in `.env.railway.example` for why that one step isn't automated.
+
+Both free-tier targets skip Redis and the queue worker to fit the free/lowest-cost plan: sessions use the `file` driver, cache uses the `database` driver (migration already included), and jobs run synchronously in-request rather than in the background. The scheduled daily notification-prune task (`routes/console.php`) also doesn't run automatically on either platform without a worker/cron service — trigger it manually or upgrade if you need it.
+
+After deploying to either platform, open **`/setup`** once to configure the store and create the first administrator.
 
 ---
 

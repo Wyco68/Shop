@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd /var/www/html
 
-# Normalize APP_KEY for Laravel (Render often omits the base64: prefix or adds quotes)
+# Normalize APP_KEY for Laravel (PaaS dashboards often omit the base64: prefix or add quotes)
 APP_KEY="${APP_KEY:-}"
 APP_KEY="${APP_KEY#\"}" ; APP_KEY="${APP_KEY%\"}"
 APP_KEY="${APP_KEY#\'}" ; APP_KEY="${APP_KEY%\'}"
@@ -23,7 +23,7 @@ else
     export APP_KEY="$APP_KEY"
 fi
 
-# Writable paths (Render container)
+# Writable paths
 chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 mkdir -p \
     storage/framework/cache/data \
@@ -32,7 +32,7 @@ mkdir -p \
     storage/logs \
     bootstrap/cache
 
-# SQLite demo database file (honour absolute DB_DATABASE from Render env)
+# SQLite demo database file (honours an absolute DB_DATABASE path, if set)
 if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
     DB_FILE="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
     mkdir -p "$(dirname "$DB_FILE")"
@@ -53,16 +53,21 @@ if ! php artisan tinker --execute="echo \\App\\Models\\User::hasAdmin() ? 'yes' 
     echo "[start] No admin yet. Visit /setup to configure the store and administrator."
 fi
 
+# Shared entrypoint for Render and Railway — both inject their own dynamic-domain variable.
 if [ -z "${APP_URL:-}" ] && [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
     export APP_URL="${RENDER_EXTERNAL_URL}"
     echo "[start] APP_URL set from RENDER_EXTERNAL_URL=${APP_URL}"
+elif [ -z "${APP_URL:-}" ] && [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
+    export APP_URL="https://${RAILWAY_PUBLIC_DOMAIN}"
+    echo "[start] APP_URL set from RAILWAY_PUBLIC_DOMAIN=${APP_URL}"
 fi
 
 if [ -z "${APP_URL:-}" ]; then
-    echo "[start] WARNING: APP_URL is not set — set https://your-app.onrender.com in Render Environment."
+    echo "[start] WARNING: APP_URL is not set — set it to your service's https:// URL."
 fi
 
-export RENDER=true
+# RENDER=true is declared explicitly in render.yaml (not forced here) — AppServiceProvider relaxes
+# session.secure only when that flag is set, and Railway's HTTPS edge doesn't need that relaxation.
 
 if [ ! -f public/build/manifest.json ]; then
     echo "[start] ERROR: public/build/manifest.json missing — Vite assets were not built into the Docker image."
