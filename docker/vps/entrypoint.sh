@@ -22,15 +22,19 @@ wait_for() {
     exit 1
 }
 
-wait_for "${DB_HOST:-mysql}" "${DB_PORT:-3306}" "MySQL"
-wait_for "${REDIS_HOST:-redis}" "${REDIS_PORT:-6379}" "Redis"
+case "$ROLE" in
+serve|worker|scheduler)
+    wait_for "${DB_HOST:-mysql}" "${DB_PORT:-3306}" "MySQL"
+    wait_for "${REDIS_HOST:-redis}" "${REDIS_PORT:-6379}" "Redis"
 
-if [[ -z "${APP_KEY:-}" ]]; then
-    echo "[entrypoint] ERROR: APP_KEY is not set."
-    echo "  Generate one and put it in your .env file before starting:"
-    echo "  docker compose -f docker-compose.vps.yml run --rm app php artisan key:generate --show"
-    exit 1
-fi
+    if [[ -z "${APP_KEY:-}" ]]; then
+        echo "[entrypoint] ERROR: APP_KEY is not set."
+        echo "  Generate one and put it in your .env file before starting:"
+        echo "  docker compose -f docker-compose.vps.yml run --rm app php artisan key:generate --show"
+        exit 1
+    fi
+    ;;
+esac
 
 case "$ROLE" in
 serve)
@@ -61,7 +65,6 @@ scheduler)
     exec php artisan schedule:work
     ;;
 *)
-    echo "[entrypoint] Unknown role: ${ROLE}" >&2
-    exit 1
+    exec "$@"
     ;;
 esac

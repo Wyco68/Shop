@@ -192,6 +192,18 @@ At minimum, set:
 - Mail settings if you want verification/password-reset emails to actually send (`MAIL_MAILER=log` writes
   to `storage/logs` only, which is fine for getting started)
 
+
+If `tmux` isn't installed: `sudo apt install -y tmux`. Reattach after a dropped connection with
+`tmux attach -t build`; detach intentionally with `Ctrl+b` then `d`.
+
+If the VPS has 2 GB RAM or less, add swap first — the PHP extension compile step alone can spike
+memory usage:
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
 Build the image. This compiles PHP extensions and runs the frontend build — it can take several
 minutes and will get killed if your SSH session drops, so run it inside `tmux` (or `screen`):
 
@@ -206,16 +218,6 @@ service name (or run `up -d --build`) on a compose file where multiple services 
 Compose can build them all in parallel, which will starve a small VPS of CPU/RAM during the PHP
 extension compile; building `app` alone avoids that.
 
-If `tmux` isn't installed: `sudo apt install -y tmux`. Reattach after a dropped connection with
-`tmux attach -t build`; detach intentionally with `Ctrl+b` then `d`.
-
-If the VPS has 2 GB RAM or less, add swap first — the PHP extension compile step alone can spike
-memory usage:
-
-```bash
-sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
 
 Generate a production `APP_KEY` (never reuse one from local dev or another deployment):
 
