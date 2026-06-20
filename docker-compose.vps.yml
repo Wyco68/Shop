@@ -1,4 +1,7 @@
-# Self-hosted VPS production stack: app + queue worker + scheduler + MySQL + Redis + Caddy (TLS).
+# Self-hosted VPS production stack: app + queue worker + scheduler + MySQL + Redis.
+# TLS termination is handled by Nginx running on the host (not in this stack) — see
+# DEPLOYMENT.md "Phase 6". The "app" container publishes 8080 on localhost only, for Nginx to
+# reverse_proxy into.
 # Usage:
 #   cp .env.vps.example .env.vps
 #   # edit .env.vps: set APP_URL, DB_PASSWORD, generate APP_KEY (see README "VPS Deployment")
@@ -23,6 +26,8 @@ services:
     build: *app-build
     command: ["serve"]
     env_file: .env.vps
+    ports:
+      - "127.0.0.1:8080:8080"
     volumes:
       - app-storage:/var/www/html/storage/app
     healthcheck:
@@ -87,26 +92,7 @@ services:
       retries: 10
     restart: unless-stopped
 
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      SITE_ADDRESS: ${SITE_ADDRESS}
-    volumes:
-      - ./docker/vps/Caddyfile:/etc/caddy/Caddyfile:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      app:
-        condition: service_healthy
-    restart: unless-stopped
-
 volumes:
   mysql-data:
   redis-data:
   app-storage:
-  caddy-data:
-  caddy-config:

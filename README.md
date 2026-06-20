@@ -230,7 +230,7 @@ After deploying to either platform, open **`/setup`** once to configure the stor
 
 ## VPS Deployment
 
-Self-hosted stack for a bare VPS (DigitalOcean, Hetzner, etc.) — app + queue worker + scheduler + MySQL + Redis + Caddy, all in Docker. Requires only **Docker Engine** + the **Docker Compose plugin** on the server.
+Self-hosted stack for a bare VPS (DigitalOcean, Hetzner, etc.) — app + queue worker + scheduler + MySQL + Redis, all in Docker. TLS is handled by Nginx + certbot on the host, outside this stack (see `DEPLOYMENT.md` "Phase 6"). Requires **Docker Engine** + the **Docker Compose plugin**, plus Nginx + certbot on the server.
 
 > Starting from a brand-new, unconfigured server (user setup, SSH hardening, firewall, fail2ban, Docker install, backups)? See [`DEPLOYMENT.md`](DEPLOYMENT.md) for the full walkthrough. The steps below assume that part is already done.
 
@@ -246,7 +246,7 @@ Self-hosted stack for a bare VPS (DigitalOcean, Hetzner, etc.) — app + queue w
    cp .env.vps.example .env.vps
    ```
 
-   Edit `.env.vps`: set `DB_PASSWORD`, `APP_URL` (and `SITE_ADDRESS` if you have a domain — DNS must already point at this server for automatic HTTPS).
+   Edit `.env.vps`: set `DB_PASSWORD` and `APP_URL`. Then set up the Nginx + certbot reverse proxy for your domain — see `DEPLOYMENT.md` "Phase 6".
 
 3. Build the image, then generate a production `APP_KEY` (never reuse one from another environment):
 
@@ -263,9 +263,9 @@ Self-hosted stack for a bare VPS (DigitalOcean, Hetzner, etc.) — app + queue w
    docker compose -f docker-compose.vps.yml --env-file .env.vps up -d
    ```
 
-   The `app` container runs migrations and storage setup on boot; `worker` and `scheduler` wait for it to report healthy before starting, so there's no startup race. Uploaded files persist in the `app-storage` volume; the database in `mysql-data`; TLS certificates in `caddy-data`.
+   The `app` container runs migrations and storage setup on boot; `worker` and `scheduler` wait for it to report healthy before starting, so there's no startup race. Uploaded files persist in the `app-storage` volume; the database in `mysql-data`.
 
-5. Open `http://your-ip/setup` (or `https://yourdomain.com/setup`) to configure the store and create the first administrator.
+5. Open `https://yourdomain.com/setup` to configure the store and create the first administrator.
 
 Useful commands:
 

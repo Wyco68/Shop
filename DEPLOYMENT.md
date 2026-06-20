@@ -12,12 +12,10 @@ If you only need the Docker/app-level steps (server is already hardened), skip t
 ## Phase 0 — Before you start
 
 - A VPS with a public IP (DigitalOcean, Hetzner, Linode, etc.) and root/console access.
-- A domain name proxied through Cloudflare (orange cloud), with its DNS record pointing at the VPS IP.
-  TLS is issued manually with certbot (Phase 6), not Caddy's automatic HTTPS — Cloudflare's proxy
-  terminates Let's Encrypt's HTTP-01/TLS-ALPN-01 challenges at its edge, so automatic HTTPS can never
-  complete for a proxied domain.
-- A Cloudflare API token scoped to `Zone:DNS:Edit` for that domain's zone (My Profile → API Tokens →
-  Create Token → "Edit zone DNS" template), used by certbot's DNS-01 challenge in Phase 6.
+- A domain name with its DNS record pointing at the VPS IP. TLS is handled by Nginx (running on the
+  host, not in Docker) + certbot's HTTP-01 challenge (Phase 6) — if the domain is proxied through
+  Cloudflare (orange cloud), switch it to "DNS only" (grey cloud) before issuing the certificate so
+  Let's Encrypt can reach the origin directly; you can switch it back to proxied afterward.
 - Your local machine's SSH public key (`~/.ssh/id_ed25519.pub` or similar). Generate one if you don't
   have it: `ssh-keygen -t ed25519`.
 
@@ -93,7 +91,7 @@ restart `ssh` again from there.
 
 ```bash
 sudo ufw allow 22/tcp        # your SSH port from Phase 2 (use 22 if you didn't change it)
-sudo ufw allow 80/tcp          # HTTP (redirects to HTTPS; Cloudflare also proxies through this)
+sudo ufw allow 80/tcp          # HTTP (Nginx uses this for the Let's Encrypt challenge + redirect)
 sudo ufw allow 443/tcp         # HTTPS
 sudo ufw enable
 sudo ufw status verbose
@@ -189,50 +187,35 @@ nano .env.vps
 
 At minimum, set:
 - `APP_URL` — `https://yourdomain.com`
-- `SITE_ADDRESS` — `yourdomain.com` (bare domain, no scheme/port — also used to find the cert below)
 - `DB_PASSWORD` — a strong password
 - `PUSHER_*` / `VITE_PUSHER_*` if you want real-time notifications, otherwise set
   `BROADCAST_CONNECTION=log`
 - Mail settings if you want verification/password-reset emails to actually send (`MAIL_MAILER=log` writes
   to `storage/logs` only, which is fine for getting started)
 
-Issue a TLS certificate with certbot, **before** starting the stack — Caddy reads it from
-`/etc/letsencrypt`, mounted read-only into the container (see [Caddyfile](docker/vps/Caddyfile)). Since
-the domain is proxied through Cloudflare, use the DNS-01 challenge via the Cloudflare plugin instead of
-the usual port-80 HTTP-01 challenge, which Cloudflare's proxy would intercept:
+Install Nginx and certbot, then set up the reverse proxy site (TLS isn't handled by Docker — the
+`app` container only publishes `127.0.0.1:8080`, which Nginx proxies into):
 
 ```bash
-sudo apt install -y certbot python3-certbot-dns-cloudflare
-sudo mkdir -p /root/.secrets
-sudo nano /root/.secrets/cloudflare.ini
+sudo apt install -y nginx certbot python3-certbot-nginx
+sudo cp docker/vps/nginx.conf.example /etc/nginx/sites-available/yourdomain.com
+sudo nano /etc/nginx/sites-available/yourdomain.com   # replace yourdomain.com with your real domain
+sudo ln -s /etc/nginx/sites-available/yourdomain.com /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Put your Cloudflare API token (scoped to `Zone:DNS:Edit` for this domain, from Phase 0) in that file:
-
-```ini
-dns_cloudflare_api_token = your-api-token-here
-```
+Issue the certificate — this only needs Nginx answering on port 80, not the app container, so it's safe
+to run before the stack is up:
 
 ```bash
-sudo chmod 600 /root/.secrets/cloudflare.ini
-sudo certbot certonly --dns-cloudflare --dns-cloudflare-credentials /root/.secrets/cloudflare.ini \
-  -d yourdomain.com
+sudo certbot --nginx -d yourdomain.com
 ```
 
-This writes `/etc/letsencrypt/live/yourdomain.com/{fullchain.pem,privkey.pem}`. certbot installs a
-systemd timer that renews automatically before the 90-day expiry; add a deploy hook so Caddy actually
-restarts and picks up the renewed cert (it won't notice the `live/` symlink swap on its own). Any
-executable script in `renewal-hooks/deploy/` runs automatically after every successful renewal:
-
-```bash
-sudo tee /etc/letsencrypt/renewal-hooks/deploy/restart-caddy.sh > /dev/null <<'EOF'
-#!/bin/sh
-docker compose -f /home/deploy/carPart/docker-compose.vps.yml restart caddy
-EOF
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-caddy.sh
-```
-
-Verify the whole pipeline (issuance + hook) without actually consuming a renewal:
+certbot edits `/etc/nginx/sites-available/yourdomain.com` in place to add the `ssl_certificate` lines
+and an HTTP→HTTPS redirect, then reloads Nginx. It also installs a systemd timer that renews
+automatically before the 90-day expiry and reloads Nginx itself — no extra hook needed. Verify the
+renewal path works without consuming a real renewal:
 
 ```bash
 sudo certbot renew --dry-run
@@ -397,7 +380,7 @@ docker compose -f docker-compose.vps.yml logs -f app
 # Resource usage
 docker stats
 
-# Disk usage of volumes (mysql-data, redis-data, app-storage, caddy-data)
+# Disk usage of volumes (mysql-data, redis-data, app-storage)
 docker system df -v
 
 # Shell into the app container
@@ -414,7 +397,7 @@ docker compose -f docker-compose.vps.yml exec app bash
 | Password SSH auth | Disabled, key-only (Phase 2) |
 | Firewall | Only SSH/80/443 open; DB/Redis never exposed (Phase 3) |
 | Brute-force protection | fail2ban on sshd (Phase 4) |
-| TLS | Manual via certbot (DNS-01, Cloudflare plugin) + Caddy, with an auto-renew deploy hook (Phase 6) |
+| TLS | Host Nginx + certbot (HTTP-01, nginx plugin), auto-renews and reloads Nginx itself (Phase 6) |
 | `APP_DEBUG` | `false` in `.env.vps.example` — verify you didn't flip it back |
 | `APP_KEY` | Unique, generated for this deployment, not reused from local/other envs (Phase 6) |
 | OS security patches | Not automated by this guide — consider `sudo apt install unattended-upgrades` |
