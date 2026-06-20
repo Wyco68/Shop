@@ -7,7 +7,8 @@
       "Bash(bash -n docker/render/start.sh)",
       "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('render.yaml'\\)\\); print\\('render.yaml OK'\\)\")",
       "Bash(python3 -c \"import tomllib; tomllib.load\\(open\\('railway.toml','rb'\\)\\); print\\('railway.toml OK'\\)\")",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "Bash(grep -rn \"max:.*[0-9]\\\\{3,\\\\}\\\\|'image'\\\\|->max\\(\" /home/wyco/carPart/app/Http/Requests/)"
     ]
   }
 }

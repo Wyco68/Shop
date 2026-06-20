@@ -64,6 +64,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker/vps/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY docker/vps/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 
 COPY --from=vendor /app /var/www/html
 COPY --from=frontend /app/public/build /var/www/html/public/build
