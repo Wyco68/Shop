@@ -1,8 +1,12 @@
-# Reverse proxy + automatic HTTPS for the VPS stack.
-# SITE_ADDRESS defaults to plain HTTP on :80 (works on a bare IP, no domain needed).
-# Set SITE_ADDRESS=yourdomain.com in .env to get free auto-renewing HTTPS via Let's Encrypt
-# (the domain's DNS A/AAAA record must already point at this server).
-{$SITE_ADDRESS::80} {
+# Reverse proxy for the VPS stack, behind Cloudflare.
+# TLS is manual, not automatic: this domain is proxied through Cloudflare (orange cloud), which
+# terminates Let's Encrypt's HTTP-01/TLS-ALPN-01 challenges at its edge, so Caddy's automatic
+# HTTPS can never complete. Instead certbot (running on the host, via the dns-cloudflare plugin)
+# issues the cert into /etc/letsencrypt, which is bind-mounted read-only into this container —
+# see DEPLOYMENT.md "Phase 6" for setup and renewal.
+{$SITE_ADDRESS} {
+	tls /etc/letsencrypt/live/{$SITE_ADDRESS}/fullchain.pem /etc/letsencrypt/live/{$SITE_ADDRESS}/privkey.pem
+
 	reverse_proxy app:8080
 	encode gzip
 

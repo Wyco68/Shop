@@ -93,9 +93,10 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      SITE_ADDRESS: ${SITE_ADDRESS}
     volumes:
       - ./docker/vps/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
