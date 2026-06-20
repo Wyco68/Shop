@@ -2,7 +2,12 @@
 # Usage:
 #   cp .env.vps.example .env.vps
 #   # edit .env.vps: set APP_URL, DB_PASSWORD, generate APP_KEY (see README "VPS Deployment")
-#   docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
+#   docker compose -f docker-compose.vps.yml --env-file .env.vps build app   # build once
+#   docker compose -f docker-compose.vps.yml --env-file .env.vps up -d      # worker/scheduler reuse it
+#
+# Only "app" has a `build:` block — worker/scheduler just reference its image tag. Giving all three
+# a `build:` (even via a shared YAML anchor) makes Compose build the same Dockerfile three times in
+# parallel, which can starve a small VPS of CPU/RAM during the PHP-extension-compile + npm build step.
 x-app-build: &app-build
   context: .
   dockerfile: docker/vps/Dockerfile
@@ -35,7 +40,6 @@ services:
 
   worker:
     image: carpart-app:latest
-    build: *app-build
     command: ["worker"]
     env_file: .env.vps
     volumes:
@@ -47,7 +51,6 @@ services:
 
   scheduler:
     image: carpart-app:latest
-    build: *app-build
     command: ["scheduler"]
     env_file: .env.vps
     volumes:

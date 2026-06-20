@@ -88,7 +88,7 @@ restart `ssh` again from there.
 ## Phase 3 — Firewall (UFW)
 
 ```bash
-sudo ufw allow 2222/tcp        # your SSH port from Phase 2 (use 22 if you didn't change it)
+sudo ufw allow 22/tcp        # your SSH port from Phase 2 (use 22 if you didn't change it)
 sudo ufw allow 80/tcp          # HTTP (Caddy uses this for the Let's Encrypt challenge + redirect)
 sudo ufw allow 443/tcp         # HTTPS
 sudo ufw enable
@@ -111,7 +111,7 @@ sudo apt install -y fail2ban
 sudo tee /etc/fail2ban/jail.local > /dev/null <<'EOF'
 [sshd]
 enabled = true
-port = 2222
+port = 22
 maxretry = 4
 bantime = 1h
 findtime = 10m
@@ -192,10 +192,29 @@ At minimum, set:
 - Mail settings if you want verification/password-reset emails to actually send (`MAIL_MAILER=log` writes
   to `storage/logs` only, which is fine for getting started)
 
-Build the image:
+Build the image. This compiles PHP extensions and runs the frontend build — it can take several
+minutes and will get killed if your SSH session drops, so run it inside `tmux` (or `screen`):
 
 ```bash
-docker compose -f docker-compose.vps.yml --env-file .env.vps build
+tmux new -s build
+docker compose -f docker-compose.vps.yml --env-file .env.vps build app
+```
+
+`worker` and `scheduler` reuse this same image (no `build:` of their own in
+[docker-compose.vps.yml](docker-compose.vps.yml)) — only `app` needs building. If you instead pass no
+service name (or run `up -d --build`) on a compose file where multiple services share a build config,
+Compose can build them all in parallel, which will starve a small VPS of CPU/RAM during the PHP
+extension compile; building `app` alone avoids that.
+
+If `tmux` isn't installed: `sudo apt install -y tmux`. Reattach after a dropped connection with
+`tmux attach -t build`; detach intentionally with `Ctrl+b` then `d`.
+
+If the VPS has 2 GB RAM or less, add swap first — the PHP extension compile step alone can spike
+memory usage:
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
 Generate a production `APP_KEY` (never reuse one from local dev or another deployment):
@@ -317,12 +336,15 @@ survive that server dying.
 ```bash
 cd ~/carPart
 git pull
-docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
+tmux new -s build   # same reasoning as Phase 6 — this can take a few minutes
+docker compose -f docker-compose.vps.yml --env-file .env.vps build app
+docker compose -f docker-compose.vps.yml --env-file .env.vps up -d
 ```
 
-This rebuilds the image (new code + any new dependencies) and recreates the containers; migrations run
-automatically on the new `app` container's boot. Expect a few seconds of downtime during the swap — this
-single-VPS setup doesn't do rolling/zero-downtime deploys.
+Rebuilding `app` and re-running `up -d` recreates all three containers — `worker`/`scheduler` pick up
+the new image automatically since they reference `app`'s image tag rather than building their own.
+Migrations run automatically on the new `app` container's boot. Expect a few seconds of downtime during
+the swap — this single-VPS setup doesn't do rolling/zero-downtime deploys.
 
 ---
 
