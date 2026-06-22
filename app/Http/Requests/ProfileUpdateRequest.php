@@ -31,6 +31,7 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'phone_num' => ['nullable', 'string', 'max:20'],
             'address'   => ['nullable', 'string', 'max:255'],
+            'notify_order_status_email' => ['sometimes', 'boolean'],
         ];
 
         if (! $this->user()->isAdmin() && $this->filled('password')) {

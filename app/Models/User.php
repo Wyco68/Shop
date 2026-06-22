@@ -15,7 +15,7 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'phone_num', 'address', 'is_active',
+        'name', 'email', 'password', 'phone_num', 'address', 'is_active', 'notify_order_status_email',
     ];
 
     protected $hidden = [
@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'notify_order_status_email' => 'boolean',
         ];
     }
 

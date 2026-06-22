@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\OrderStatusUpdated;
 use App\Models\Notification;
+use App\Notifications\OrderStatusUpdatedNotification;
 
 class NotifyUserOrderStatusUpdated
 {
@@ -35,5 +36,7 @@ class NotifyUserOrderStatusUpdated
                 'to_status'   => $event->toStatus,
             ]
         );
+
+        $user->notify(new OrderStatusUpdatedNotification($order, $event->fromStatus, $event->toStatus));
     }
 }

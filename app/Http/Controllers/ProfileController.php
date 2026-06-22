@@ -46,6 +46,12 @@ class ProfileController extends Controller
             'name', 'email', 'phone_num', 'address',
         ])->all());
 
+        // Only the account-info form sends this field (via a hidden "0" + checkbox "1" pair) —
+        // the separate change-password form doesn't, so absence must not reset the preference.
+        if ($request->has('notify_order_status_email')) {
+            $request->user()->notify_order_status_email = $request->boolean('notify_order_status_email');
+        }
+
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }

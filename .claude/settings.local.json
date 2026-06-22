@@ -11,7 +11,16 @@
       "Bash(grep -rn \"max:.*[0-9]\\\\{3,\\\\}\\\\|'image'\\\\|->max\\(\" /home/wyco/carPart/app/Http/Requests/)",
       "Bash(bash -n /home/wyco/carPart/docker/vps/entrypoint.sh)",
       "Bash(python3 -c \"import yaml,sys; yaml.safe_load\\(open\\('/home/wyco/carPart/docker-compose.vps.yml'\\)\\)\")",
-      "Bash(grep -rn 'x-text=\"$store.notifications.unreadCount\"' /home/wyco/carPart/resources/views/)"
+      "Bash(grep -rn 'x-text=\"$store.notifications.unreadCount\"' /home/wyco/carPart/resources/views/)",
+      "Bash(grep -n 'protected $fillable\\\\|'\\\\''total'\\\\''\\\\|'\\\\''currency'\\\\''\\\\|'\\\\''status'\\\\''\\\\|public function user' /home/wyco/carPart/app/Models/Order.php)",
+      "Bash(composer --version)",
+      "Bash(php -l app/Notifications/OrderStatusUpdatedNotification.php)",
+      "Bash(php -l app/Listeners/NotifyUserOrderStatusUpdated.php)",
+      "Bash(php -l /home/wyco/carPart/app/Http/Controllers/ProfileController.php)",
+      "Bash(php -l /home/wyco/carPart/app/Http/Requests/ProfileUpdateRequest.php)",
+      "Bash(php -l /home/wyco/carPart/app/Models/User.php)",
+      "Bash(php -l /home/wyco/carPart/app/Notifications/OrderStatusUpdatedNotification.php)",
+      "Bash(php -l /home/wyco/carPart/database/migrations/2026_06_22_112322_add_notify_order_status_email_to_users_table.php)"
     ]
   }
 }

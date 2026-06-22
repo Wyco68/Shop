@@ -70,6 +70,22 @@
                 @error('address') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Order status emails (account verification / password reset emails cannot be disabled) --}}
+            <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-700">Order status emails</p>
+                    <p class="text-xs text-gray-500">Get notified by email when your order status changes.</p>
+                </div>
+                <input type="hidden" name="notify_order_status_email" value="0">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="notify_order_status_email" value="1"
+                        {{ old('notify_order_status_email', $user->notify_order_status_email) ? 'checked' : '' }}
+                        class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-gray-900 transition-colors"></div>
+                    <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
+                </label>
+            </div>
+
             <button type="submit"
                 class="w-full bg-gray-900 text-white font-semibold py-2.5 rounded-xl hover:bg-gray-700 transition text-sm">
                 Save Changes
