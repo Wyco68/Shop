@@ -12,7 +12,7 @@
 - Laravel 12, PHP 8.4, MySQL 8
 - Redis (sessions, cache, queues)
 - Blade, Tailwind CSS v4, Alpine.js
-- Pusher Channels + Laravel Echo
+- Laravel Reverb (self-hosted WebSockets) + Laravel Echo
 - Laravel Sail (Docker)
 
 ## Prerequisites
@@ -161,7 +161,7 @@ alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'
 | DB/Redis connection refused | Confirm `DB_HOST=mysql` and `REDIS_HOST=redis` in `.env` (not `127.0.0.1`). |
 | Port `80` or `3306` already in use | Set `APP_PORT`, `FORWARD_DB_PORT`, or `FORWARD_REDIS_PORT` in `.env` before `sail up`. |
 | `sail up` fails: image not found | Run the Step 2 bootstrap first — `vendor/laravel/sail` must exist. |
-| No live notifications locally | Set Pusher vars in `.env` or use `BROADCAST_CONNECTION=log` for log-only. |
+| No live notifications locally | Set `BROADCAST_CONNECTION=reverb` + `REVERB_*`/`VITE_REVERB_*` in `.env` and run `sail artisan reverb:start`, or use `BROADCAST_CONNECTION=log` for log-only. |
 | Frontend shows blank / missing styles | Run `sail npm ci && sail npm run build` (or `sail npm run dev` for HMR). |
 
 ---
@@ -280,7 +280,7 @@ docker compose -f docker-compose.vps.yml exec app php artisan <command>
 docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
 ```
 
-By default uploads are stored on the local `app-storage` volume (`FILESYSTEM_DISK=local`). Set `FILESYSTEM_DISK`/`FILESYSTEM_PRODUCT_DISK`/`FILESYSTEM_PRIVATE_DISK=s3` and fill in `AWS_*` in `.env.vps` to use S3 instead. Real-time notifications need a Pusher account (`PUSHER_*` / `VITE_PUSHER_*`) — set `BROADCAST_CONNECTION=log` to disable them instead.
+By default uploads are stored on the local `app-storage` volume (`FILESYSTEM_DISK=local`). Set `FILESYSTEM_DISK`/`FILESYSTEM_PRODUCT_DISK`/`FILESYSTEM_PRIVATE_DISK=s3` and fill in `AWS_*` in `.env.vps` to use S3 instead. Real-time notifications run on the self-hosted `reverb` container (`REVERB_*` / `VITE_REVERB_*` in `.env.vps`) — set `BROADCAST_CONNECTION=log` to disable them instead.
 
 ---
 

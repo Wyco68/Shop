@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # docker/vps/entrypoint.sh — startup for the VPS production image.
-# Role is selected by the container command: serve (default), worker, scheduler.
-# serve runs migrations/storage setup once; worker and scheduler wait for it via
+# Role is selected by the container command: serve (default), worker, scheduler, reverb.
+# serve runs migrations/storage setup once; worker, scheduler, and reverb wait for it via
 # the "app" service healthcheck in docker-compose.vps.yml, so they never race it.
 set -euo pipefail
 
@@ -23,7 +23,7 @@ wait_for() {
 }
 
 case "$ROLE" in
-serve|worker|scheduler)
+serve|worker|scheduler|reverb)
     wait_for "${DB_HOST:-mysql}" "${DB_PORT:-3306}" "MySQL"
     wait_for "${REDIS_HOST:-redis}" "${REDIS_PORT:-6379}" "Redis"
 
@@ -63,6 +63,9 @@ worker)
     ;;
 scheduler)
     exec php artisan schedule:work
+    ;;
+reverb)
+    exec php artisan reverb:start
     ;;
 *)
     exec "$@"

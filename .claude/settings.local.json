@@ -8,7 +8,9 @@
       "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('render.yaml'\\)\\); print\\('render.yaml OK'\\)\")",
       "Bash(python3 -c \"import tomllib; tomllib.load\\(open\\('railway.toml','rb'\\)\\); print\\('railway.toml OK'\\)\")",
       "Bash(git status *)",
-      "Bash(grep -rn \"max:.*[0-9]\\\\{3,\\\\}\\\\|'image'\\\\|->max\\(\" /home/wyco/carPart/app/Http/Requests/)"
+      "Bash(grep -rn \"max:.*[0-9]\\\\{3,\\\\}\\\\|'image'\\\\|->max\\(\" /home/wyco/carPart/app/Http/Requests/)",
+      "Bash(bash -n /home/wyco/carPart/docker/vps/entrypoint.sh)",
+      "Bash(python3 -c \"import yaml,sys; yaml.safe_load\\(open\\('/home/wyco/carPart/docker-compose.vps.yml'\\)\\)\")"
     ]
   }
 }

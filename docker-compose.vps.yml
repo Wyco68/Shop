@@ -1,7 +1,7 @@
-# Self-hosted VPS production stack: app + queue worker + scheduler + MySQL + Redis.
+# Self-hosted VPS production stack: app + queue worker + scheduler + reverb + MySQL + Redis.
 # TLS termination is handled by Nginx running on the host (not in this stack) — see
-# DEPLOYMENT.md "Phase 6". The "app" container publishes 8080 on localhost only, for Nginx to
-# reverse_proxy into.
+# DEPLOYMENT.md "Phase 6". The "app" and "reverb" containers each publish a port on localhost
+# only, for Nginx to reverse_proxy/upgrade into.
 # Usage:
 #   cp .env.vps.example .env.vps
 #   # edit .env.vps: set APP_URL, DB_PASSWORD, generate APP_KEY (see README "VPS Deployment")
@@ -15,9 +15,10 @@ x-app-build: &app-build
   context: .
   dockerfile: docker/vps/Dockerfile
   args:
-    VITE_PUSHER_APP_KEY: ${VITE_PUSHER_APP_KEY:-}
-    VITE_PUSHER_APP_CLUSTER: ${VITE_PUSHER_APP_CLUSTER:-mt1}
-    VITE_PUSHER_SCHEME: ${VITE_PUSHER_SCHEME:-https}
+    VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:-}
+    VITE_REVERB_HOST: ${VITE_REVERB_HOST:-}
+    VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
+    VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
     VITE_APP_NAME: ${VITE_APP_NAME:-E-Commerce}
 
 services:
@@ -60,6 +61,17 @@ services:
     env_file: .env.vps
     volumes:
       - app-storage:/var/www/html/storage/app
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  reverb:
+    image: carpart-app:latest
+    command: ["reverb"]
+    env_file: .env.vps
+    ports:
+      - "127.0.0.1:8081:8080"
     depends_on:
       app:
         condition: service_healthy

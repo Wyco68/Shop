@@ -188,8 +188,10 @@ nano .env.vps
 At minimum, set:
 - `APP_URL` — `https://yourdomain.com`
 - `DB_PASSWORD` — a strong password
-- `PUSHER_*` / `VITE_PUSHER_*` if you want real-time notifications, otherwise set
-  `BROADCAST_CONNECTION=log`
+- `REVERB_APP_ID`/`REVERB_APP_KEY`/`REVERB_APP_SECRET` (random values, e.g. `openssl rand -hex 16`)
+  and `VITE_REVERB_APP_KEY`/`VITE_REVERB_HOST` if you want real-time notifications — see the
+  comments in `.env.vps.example`; otherwise set `BROADCAST_CONNECTION=log`. The Nginx config below
+  already proxies the WebSocket path the browser needs (`/app/`).
 - Mail settings if you want verification/password-reset emails to actually send (`MAIL_MAILER=log` writes
   to `storage/logs` only, which is fine for getting started)
 
@@ -265,8 +267,8 @@ Watch it come up:
 docker compose -f docker-compose.vps.yml logs -f
 ```
 
-The `app` container runs migrations and storage setup on boot. `worker` and `scheduler` wait for `app` to
-report healthy before starting, so there's no startup race. Once `app` is healthy, visit:
+The `app` container runs migrations and storage setup on boot. `worker`, `scheduler`, and `reverb` wait
+for `app` to report healthy before starting, so there's no startup race. Once `app` is healthy, visit:
 
 ```
 https://yourdomain.com/setup
@@ -286,11 +288,12 @@ docker compose -f docker-compose.vps.yml run --rm app composer show
 
 ## Phase 7 — Queue worker & scheduler ("supervisor", the Docker-native way)
 
-`docker-compose.vps.yml` already runs the queue worker and Laravel scheduler as their own containers
-(`worker` runs `queue:work`, `scheduler` runs `schedule:work`), each with `restart: unless-stopped`. This
-*is* the production process supervisor here — Docker's restart policy plays the role `supervisord` plays
-in the single-container dev image (`docker/Dockerfile`); there's no separate supervisor process to
-install on the host or inside these containers.
+`docker-compose.vps.yml` already runs the queue worker, Laravel scheduler, and Reverb server as their
+own containers (`worker` runs `queue:work`, `scheduler` runs `schedule:work`, `reverb` runs
+`reverb:start`), each with `restart: unless-stopped`. This *is* the production process supervisor here
+— Docker's restart policy plays the role `supervisord` plays in the single-container dev image
+(`docker/Dockerfile`); there's no separate supervisor process to install on the host or inside these
+containers.
 
 Check worker health and logs:
 
@@ -363,8 +366,8 @@ docker compose -f docker-compose.vps.yml --env-file .env.vps build app
 docker compose -f docker-compose.vps.yml --env-file .env.vps up -d
 ```
 
-Rebuilding `app` and re-running `up -d` recreates all three containers — `worker`/`scheduler` pick up
-the new image automatically since they reference `app`'s image tag rather than building their own.
+Rebuilding `app` and re-running `up -d` recreates all four containers — `worker`/`scheduler`/`reverb`
+pick up the new image automatically since they reference `app`'s image tag rather than building their own.
 Migrations run automatically on the new `app` container's boot. Expect a few seconds of downtime during
 the swap — this single-VPS setup doesn't do rolling/zero-downtime deploys.
 
