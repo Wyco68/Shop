@@ -10,7 +10,8 @@
       "Bash(git status *)",
       "Bash(grep -rn \"max:.*[0-9]\\\\{3,\\\\}\\\\|'image'\\\\|->max\\(\" /home/wyco/carPart/app/Http/Requests/)",
       "Bash(bash -n /home/wyco/carPart/docker/vps/entrypoint.sh)",
-      "Bash(python3 -c \"import yaml,sys; yaml.safe_load\\(open\\('/home/wyco/carPart/docker-compose.vps.yml'\\)\\)\")"
+      "Bash(python3 -c \"import yaml,sys; yaml.safe_load\\(open\\('/home/wyco/carPart/docker-compose.vps.yml'\\)\\)\")",
+      "Bash(grep -rn 'x-text=\"$store.notifications.unreadCount\"' /home/wyco/carPart/resources/views/)"
     ]
   }
 }

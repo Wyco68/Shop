@@ -68,7 +68,10 @@
                             Notifications
                         </div>
                         <template x-if="$store.notifications && $store.notifications.unreadCount > 0">
-                            <span x-text="$store.notifications.unreadCount" class="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                            <span class="relative flex h-2.5 w-2.5">
+                                <span class="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                            </span>
                         </template>
                     </a>
                 </div>
