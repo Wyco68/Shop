@@ -22,7 +22,7 @@ document.addEventListener('alpine:init', () => {
             store.listenForNewNotifications();
 
             const userIdMeta = document.querySelector('meta[name="user-id"]');
-            if (userIdMeta && store.notifications.length === 0) {
+            if (userIdMeta) {
                 store.fetchNotifications();
             }
         },
