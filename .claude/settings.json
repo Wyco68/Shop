@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('docker-compose.vps.yml'\\)\\); print\\('OK'\\)\")",
       "Bash(docker compose *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(php artisan *)"
     ]
   }
 }

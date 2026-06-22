@@ -20,7 +20,24 @@
       "Bash(php -l /home/wyco/carPart/app/Http/Requests/ProfileUpdateRequest.php)",
       "Bash(php -l /home/wyco/carPart/app/Models/User.php)",
       "Bash(php -l /home/wyco/carPart/app/Notifications/OrderStatusUpdatedNotification.php)",
-      "Bash(php -l /home/wyco/carPart/database/migrations/2026_06_22_112322_add_notify_order_status_email_to_users_table.php)"
+      "Bash(php -l /home/wyco/carPart/database/migrations/2026_06_22_112322_add_notify_order_status_email_to_users_table.php)",
+      "Bash(docker exec *)",
+      "Bash(./vendor/bin/sail npm *)",
+      "Bash(rm -rf /tmp/pw /tmp/build-test /tmp/idx.json /tmp/show.json /tmp/products_full.html)",
+      "Bash(rm -rf ~/.cache/ms-playwright)",
+      "Read(//home/wyco/.npm/_npx/**)",
+      "Read(//home/wyco/.cache/ms-playwright/**)",
+      "Bash(xargs -I{} du -sh {})",
+      "Bash(rm -rf ~/.npm/_npx *)",
+      "Bash(curl -s http://localhost/products)",
+      "Bash(curl -s -o /dev/null -w \"home status: %{http_code}\\\\n\" http://localhost/)",
+      "Bash(curl -s http://localhost:5173/resources/js/app.js)",
+      "Bash(curl -s -o /dev/null -w \"vite client status: %{http_code}\\\\n\" http://localhost:5173/@vite/client)",
+      "Bash(curl -s http://localhost/products -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost/ -o /dev/null -w \"%{http_code}\\\\n\")"
+    ],
+    "additionalDirectories": [
+      "/home/wyco/.npm/_npx"
     ]
   }
 }
