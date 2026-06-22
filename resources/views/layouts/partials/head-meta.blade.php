@@ -9,6 +9,11 @@
     <meta name="user-id" content="{{ auth()->id() }}">
 @endauth
 
+{{-- Opts every same-origin full-page navigation into the browser-native
+     Cross-Document View Transition (Chromium 126+). No JS, no SPA routing;
+     unsupported browsers just fall back to a normal full reload. --}}
+<meta name="view-transition" content="same-origin">
+
 <link rel="icon" href="{{ $storeFaviconUrl ?? asset('images/logo.png') }}">
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])

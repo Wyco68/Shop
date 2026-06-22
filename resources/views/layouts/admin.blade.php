@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+        #admin-sidebar { view-transition-name: admin-sidebar; }
+        #admin-topbar { view-transition-name: admin-topbar; }
     </style>
 </head>
 <body class="antialiased bg-slate-50 text-slate-800 overflow-x-hidden flex min-h-screen" x-data="{ sidebarOpen: false }">

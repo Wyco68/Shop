@@ -1,5 +1,5 @@
 <!-- Sticky Topbar -->
-<header class="h-16 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-6 shrink-0 shadow-sm shadow-slate-100/40">
+<header id="admin-topbar" class="h-16 sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-6 shrink-0 shadow-sm shadow-slate-100/40">
     <!-- Left Side: Mobile toggle & Breadcrumb -->
     <div class="flex items-center gap-4">
         <button @click="sidebarOpen = true"
