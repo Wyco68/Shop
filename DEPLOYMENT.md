@@ -280,13 +280,60 @@ docker compose -f docker-compose.vps.yml logs -f
 ```
 
 The `app` container runs migrations and storage setup on boot. `worker`, `scheduler`, and `reverb` wait
-for `app` to report healthy before starting, so there's no startup race. Once `app` is healthy, visit:
+for `app` to report healthy before starting, so there's no startup race. Once `app` is healthy, configure
+the store and create the first administrator — this is CLI-only (there is no `/setup` web page) so it
+can't be raced or probed by anyone hitting the domain before you finish:
 
-```
-https://yourdomain.com/setup
+```bash
+docker compose -f docker-compose.vps.yml exec app php artisan store:setup
 ```
 
-to configure the store and create the first administrator.
+Answer the prompts (store name, currency, administrator email/password). Until this command has been run,
+every web request returns a 503 ("This store has not been configured yet"), so it's safe to leave the
+domain pointed at the server while you do this.
+
+### Restrict trusted proxies (required — do this before going live)
+
+[bootstrap/app.php](bootstrap/app.php) ships with `trustProxies(at: '*')`, which is a development-only
+placeholder: it tells Laravel to trust `X-Forwarded-For`/`X-Forwarded-Proto` from *any* client, not just
+your reverse proxy. On a real VPS this is exploitable — a visitor can set their own `X-Forwarded-For`
+header on every request and `$request->ip()` will return whatever they sent. Several security controls
+key off that value, so trusting `'*'` lets an attacker bypass them outright:
+
+- Login, password-reset, and email-resend rate limiting (`app/Providers/AppServiceProvider.php`) — an
+  attacker can rotate a fake IP on every request and brute-force a password with no lockout.
+- `AuthSecurityLogger` audit entries — the attacker IP recorded for failed logins, lockouts, etc. can be
+  forged.
+
+In this stack, Nginx runs on the **host** and is the only thing allowed to talk to the `app` container
+(it's published as `127.0.0.1:8080`, not exposed publicly — see `docker-compose.vps.yml`). So the only
+proxy that should ever be trusted is Nginx itself, as seen from inside the container — which, because of
+Docker's port-publishing NAT, is the Docker bridge network's gateway address, not `127.0.0.1`. Find it
+after the stack is up:
+
+```bash
+docker network inspect carpart_default --format '{{(index .IPAM.Config 0).Gateway}}'
+```
+
+(replace `carpart_default` with whatever `docker network ls` shows for this project — it's derived from
+the directory name you cloned into). Then edit `bootstrap/app.php` on **this server** and replace the
+wildcard with that address:
+
+```php
+$middleware->trustProxies(
+    at: '172.18.0.1', // <- the Gateway IP printed above, specific to this VPS
+    headers: Request::HEADER_X_FORWARDED_FOR
+        | Request::HEADER_X_FORWARDED_HOST
+        | Request::HEADER_X_FORWARDED_PORT
+        | Request::HEADER_X_FORWARDED_PROTO,
+);
+```
+
+Rebuild and redeploy (`docker compose -f docker-compose.vps.yml --env-file .env.vps build app && docker
+compose -f docker-compose.vps.yml --env-file .env.vps up -d`) after editing. The gateway address is
+generally stable for a given Compose project but can change if the network is removed and recreated
+(e.g. `docker compose down` followed by a fresh `up`) — re-run the `docker network inspect` command and
+update `bootstrap/app.php` again if logins start failing to record the right IP after such an event.
 
 One-off Composer/Artisan commands, run through the container instead of installing anything on the host:
 
@@ -415,6 +462,8 @@ docker compose -f docker-compose.vps.yml exec app bash
 | TLS | Host Nginx + certbot (HTTP-01, nginx plugin), auto-renews and reloads Nginx itself (Phase 6) |
 | `APP_DEBUG` | `false` in `.env.vps.example` — verify you didn't flip it back |
 | `APP_KEY` | Unique, generated for this deployment, not reused from local/other envs (Phase 6) |
+| Trusted proxies | `bootstrap/app.php` `trustProxies(at: ...)` set to the Docker gateway IP, not `'*'` — verify this was changed from the placeholder (Phase 6) |
+| Store setup | CLI-only (`php artisan store:setup`) — there is no `/setup` web page to probe or race (Phase 6) |
 | OS security patches | Not automated by this guide — consider `sudo apt install unattended-upgrades` |
 
 Optional hardening not covered above: `unattended-upgrades` for automatic OS security patches, and a

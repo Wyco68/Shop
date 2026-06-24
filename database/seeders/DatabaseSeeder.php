@@ -12,8 +12,8 @@ class DatabaseSeeder extends Seeder
     /**
      * Intentionally empty — no demo catalog or users.
      *
-     * After migrate, complete first-run setup in the browser:
-     *   /setup
+     * After migrate, complete first-run setup via CLI:
+     *   php artisan store:setup
      */
     public function run(): void
     {

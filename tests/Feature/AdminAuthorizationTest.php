@@ -17,7 +17,7 @@ class AdminAuthorizationTest extends TestCase
 
     public function test_setup_creates_the_only_admin_account(): void
     {
-        $this->post('/setup', [
+        app(AdminBootstrapService::class)->createAdmin([
             'store_name' => 'Secure Shop',
             'currency_code' => 'USD',
             'currency_symbol' => '$',
@@ -25,8 +25,7 @@ class AdminAuthorizationTest extends TestCase
             'name' => 'Owner',
             'email' => 'owner@store.test',
             'password' => self::PASSWORD,
-            'password_confirmation' => self::PASSWORD,
-        ])->assertRedirect(route('login'));
+        ]);
 
         $this->assertEquals(1, User::query()->where('role', UserRole::Admin->value)->count());
     }
@@ -36,17 +35,19 @@ class AdminAuthorizationTest extends TestCase
         User::factory()->admin()->create();
 
         $this->get('/setup')->assertNotFound();
-        $this->post('/setup', [
+        $this->post('/setup')->assertNotFound();
+        $this->assertEquals(1, User::query()->where('role', UserRole::Admin->value)->count());
+
+        $this->expectException(ValidationException::class);
+
+        app(AdminBootstrapService::class)->createAdmin([
             'store_name' => 'Another Shop',
             'currency_code' => 'USD',
             'currency_symbol' => '$',
             'currency_position' => 'before',
             'email' => 'second@store.test',
             'password' => self::PASSWORD,
-            'password_confirmation' => self::PASSWORD,
-        ])->assertNotFound();
-
-        $this->assertEquals(1, User::query()->where('role', UserRole::Admin->value)->count());
+        ]);
     }
 
     public function test_registration_rejects_role_field_and_creates_user_role(): void

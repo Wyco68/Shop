@@ -19,7 +19,7 @@ class StoreNameBootstrapTest extends TestCase
     {
         Cache::flush();
 
-        $this->post('/setup', [
+        app(AdminBootstrapService::class)->createAdmin([
             'store_name' => 'Buyer Motors',
             'currency_code' => 'USD',
             'currency_symbol' => '$',
@@ -27,8 +27,7 @@ class StoreNameBootstrapTest extends TestCase
             'name' => 'Owner',
             'email' => 'owner@buyer.test',
             'password' => 'SecurePass1!Word',
-            'password_confirmation' => 'SecurePass1!Word',
-        ])->assertRedirect(route('login'));
+        ]);
 
         $this->assertSame('Buyer Motors', StoreSetting::query()->value('store_name'));
         $this->assertTrue((bool) StoreSetting::query()->value('currency_locked'));

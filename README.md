@@ -95,9 +95,14 @@ For live HMR during development:
 ./vendor/bin/sail npm run dev
 ```
 
-### 8. Open the setup page
+### 8. Run the setup command
 
-Visit **[http://localhost/setup](http://localhost/setup)** to configure the store and create the first administrator account.
+```bash
+./vendor/bin/sail artisan store:setup
+```
+
+Answer the prompts to configure the store and create the first administrator account. This is CLI-only
+— there is no web setup page.
 
 ---
 
@@ -168,8 +173,8 @@ alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'
 
 ## Admin Setup
 
-- After `migrate`, visit **`/setup`** once (no admin exists yet). Configure store name, **base currency** (ISO code, symbol, position), and the first administrator account. `/setup` returns 404 after the first admin is created.
-- Until setup completes, the app redirects all visitors to `/setup`.
+- After `migrate`, run `php artisan store:setup` once (no admin exists yet). Configure store name, **base currency** (ISO code, symbol, position), and the first administrator account. The command refuses to run again once the first admin exists.
+- Until setup completes, the app returns a 503 to all web visitors — there is no `/setup` web page to visit.
 - **Currency is set once** during setup, then `currency_locked` prevents changes via admin/API. Emergency override: `./vendor/bin/sail artisan currency:force-change` (interactive confirmation, logged).
 - Password: 12+ chars with mixed case, numbers, and symbols.
 - No demo users or catalog seed data.
@@ -224,7 +229,10 @@ Links/creates a Railway project, generates `APP_KEY`, pushes [`.env.railway.exam
 
 Both free-tier targets skip Redis and the queue worker to fit the free/lowest-cost plan: sessions use the `file` driver, cache uses the `database` driver (migration already included), and jobs run synchronously in-request rather than in the background. The scheduled daily notification-prune task (`routes/console.php`) also doesn't run automatically on either platform without a worker/cron service — trigger it manually or upgrade if you need it.
 
-After deploying to either platform, open **`/setup`** once to configure the store and create the first administrator.
+After deploying to either platform, run `php artisan store:setup` once via the platform's shell/console
+(Render: Shell tab on the service; Railway: `railway run php artisan store:setup`) to configure the store
+and create the first administrator. There is no `/setup` web page — until this command runs, the app
+returns a 503 to all visitors.
 
 ---
 
@@ -265,7 +273,15 @@ Self-hosted stack for a bare VPS (DigitalOcean, Hetzner, etc.) — app + queue w
 
    The `app` container runs migrations and storage setup on boot; `worker` and `scheduler` wait for it to report healthy before starting, so there's no startup race. Uploaded files persist in the `app-storage` volume; the database in `mysql-data`.
 
-5. Open `https://yourdomain.com/setup` to configure the store and create the first administrator.
+5. Configure the store and create the first administrator (CLI-only — there is no `/setup` web page):
+
+   ```bash
+   docker compose -f docker-compose.vps.yml exec app php artisan store:setup
+   ```
+
+   Also restrict `trustProxies` in `bootstrap/app.php` to your reverse proxy before going live — see
+   `DEPLOYMENT.md` "Phase 6" for why the default `'*'` is unsafe in production and how to find the
+   correct value for this stack.
 
 Useful commands:
 
@@ -293,7 +309,7 @@ Complete **before** exposing the app to the public internet:
 | `APP_DEBUG` | `true` (dev only) | **`false`** — never enable in production |
 | `APP_KEY` | Generate per machine | **Unique** key per environment (never copy from local) |
 | `LOG_LEVEL` | `debug` | `info`, `warning`, or `error` |
-| Admin bootstrap | Visit `/setup` once | Complete `/setup` **before** DNS goes live |
+| Admin bootstrap | Run `php artisan store:setup` once | Run `store:setup` **before** DNS goes live |
 | Database / Redis | Forwarded ports OK locally | **Private network only** — do not expose `3306`/`6379` publicly |
 | Reverse proxy | Optional locally | Terminate TLS at edge; restrict `trustProxies` to real proxy IPs |
 | `.env` | Gitignored | Store secrets in host dashboard only — never commit |

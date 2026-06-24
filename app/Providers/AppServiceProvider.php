@@ -92,7 +92,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Only force https when APP_URL actually is https — a VPS with no domain yet
             // (bare IP, plain HTTP) would otherwise get its own links forced to a scheme
-            // nothing is listening on, breaking the /setup form and every generated URL.
+            // nothing is listening on, breaking every generated URL.
             if ($appUrl && str_starts_with($appUrl, 'https://')) {
                 URL::forceScheme('https');
             }

@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\SetupController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
@@ -12,12 +11,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RefundController;
 use App\Http\Controllers\Admin;
 use Illuminate\Support\Facades\Route;
-
-// First-run admin setup (disabled once an admin exists)
-Route::middleware('no_admin_yet')->group(function () {
-    Route::get('/setup', [SetupController::class, 'create'])->name('setup.create');
-    Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
-});
 
 // Public routes
 Route::middleware('redirect_admin')->group(function () {

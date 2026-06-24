@@ -16,7 +16,7 @@ class ShopForceChangeNameCommand extends Command
                             {--name= : New store name}
                             {--force : Skip interactive confirmation}';
 
-    protected $description = 'One-time CLI override to change the store name set at /setup (logs action)';
+    protected $description = 'One-time CLI override to change the store name set via store:setup (logs action)';
 
     public function handle(StoreSettingsService $settings): int
     {

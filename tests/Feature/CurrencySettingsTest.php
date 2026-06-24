@@ -30,15 +30,14 @@ class CurrencySettingsTest extends TestCase
 
     public function test_setup_locks_currency(): void
     {
-        $this->post('/setup', [
+        app(\App\Services\AdminBootstrapService::class)->createAdmin([
             'store_name' => 'New Shop',
             'currency_code' => 'THB',
             'currency_symbol' => '฿',
             'currency_position' => 'after',
             'email' => 'admin@shop.test',
             'password' => 'SecurePass1!Word',
-            'password_confirmation' => 'SecurePass1!Word',
-        ])->assertRedirect(route('login'));
+        ]);
 
         $this->assertDatabaseHas('store_settings', [
             'store_name' => 'New Shop',

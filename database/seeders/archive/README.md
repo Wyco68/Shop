@@ -2,4 +2,4 @@
 
 These seeders populated demo automotive catalog data and are **not** run by default.
 
-Use factories in tests or create data via the admin panel after completing `/setup`.
+Use factories in tests or create data via the admin panel after completing `php artisan store:setup`.

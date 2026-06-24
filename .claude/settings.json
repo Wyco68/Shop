@@ -7,7 +7,9 @@
       "Bash(php artisan *)",
       "Bash(xargs -I{} basename {})",
       "Bash(php -l /home/wyco/carPart/app/Console/Commands/ShopForceChangeNameCommand.php)",
-      "Bash(php -l /home/wyco/carPart/app/Services/StoreSettingsService.php)"
+      "Bash(php -l /home/wyco/carPart/app/Services/StoreSettingsService.php)",
+      "Bash(grep '$request->all\\(\\)')",
+      "Bash(grep -rn '$fillable\\\\|$guarded' /home/wyco/carPart/app/Models/)"
     ]
   }
 }

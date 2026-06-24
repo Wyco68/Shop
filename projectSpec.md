@@ -28,7 +28,7 @@
 ## Admin
 
 - Dashboard, products, categories, orders, payments, refunds, users, payment methods.
-- Shop name: set once at `/setup` (not editable in admin)
+- Shop name: set once via `php artisan store:setup` (CLI-only, not editable in admin)
 - Branding: `/admin/settings/branding` (favicon, logo)
 - Payment methods: `/admin/settings/payments`
 - Category icons: `/admin/categories`

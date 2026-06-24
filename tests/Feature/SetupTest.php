@@ -10,41 +10,32 @@ class SetupTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_setup_available_when_no_admin(): void
+    public function test_setup_route_no_longer_exists(): void
     {
-        $this->get('/setup')->assertOk();
+        $this->get('/setup')->assertNotFound();
+        $this->post('/setup')->assertNotFound();
     }
 
-    public function test_setup_hidden_after_admin_exists(): void
+    public function test_setup_command_refuses_when_admin_exists(): void
     {
         User::factory()->admin()->create();
 
-        $this->get('/setup')->assertNotFound();
-        $this->post('/setup', [
-            'store_name' => 'Another Shop',
-            'currency_code' => 'USD',
-            'currency_symbol' => '$',
-            'currency_position' => 'before',
-            'email' => 'new@example.com',
-            'password' => 'SecurePass1!Word',
-            'password_confirmation' => 'SecurePass1!Word',
-        ])->assertNotFound();
+        $this->artisan('store:setup')->assertFailed();
     }
 
-    public function test_setup_creates_admin(): void
+    public function test_setup_command_creates_admin(): void
     {
-        $response = $this->post('/setup', [
-            'store_name' => 'My Store',
-            'currency_code' => 'USD',
-            'currency_symbol' => '$',
-            'currency_position' => 'before',
-            'name' => 'Admin',
-            'email' => 'admin@store.test',
-            'password' => 'SecurePass1!Word',
-            'password_confirmation' => 'SecurePass1!Word',
-        ]);
+        $this->artisan('store:setup')
+            ->expectsQuestion('Store name', 'My Store')
+            ->expectsQuestion('Currency code (3-letter, e.g. USD)', 'USD')
+            ->expectsQuestion('Currency symbol (e.g. $)', '$')
+            ->expectsChoice('Currency symbol position', 'before', ['before', 'after'])
+            ->expectsQuestion('Administrator name (optional, defaults to part before @ in email)', 'Admin')
+            ->expectsQuestion('Administrator email', 'admin@store.test')
+            ->expectsQuestion('Administrator password', 'SecurePass1!Word')
+            ->expectsQuestion('Confirm administrator password', 'SecurePass1!Word')
+            ->assertSuccessful();
 
-        $response->assertRedirect(route('login'));
         $this->assertTrue(User::where('email', 'admin@store.test')->first()?->isAdmin() ?? false);
     }
 }
