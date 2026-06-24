@@ -195,6 +195,18 @@ At minimum, set:
 - Mail settings if you want verification/password-reset emails to actually send (`MAIL_MAILER=log` writes
   to `storage/logs` only, which is fine for getting started)
 
+```bash
+echo "REVERB_APP_ID=$(openssl rand -hex 8)"
+echo "REVERB_APP_KEY=$(openssl rand -hex 16)"
+echo "REVERB_APP_SECRET=$(openssl rand -hex 32)"
+
+```
+Copy the three printed lines straight into .env.vps. Then set VITE_REVERB_APP_KEY to the same value as REVERB_APP_KEY (the client and server must agree on this key — it's not a separate secret, it's how Reverb identifies which "app" the connection belongs to):
+
+nano .env.vps
+
+Note VITE_REVERB_APP_KEY and REVERB_APP_KEY are identical above — that's intentional, not a typo. 
+
 Install Nginx and certbot, then set up the reverse proxy site (TLS isn't handled by Docker — the
 `app` container only publishes `127.0.0.1:8080`, which Nginx proxies into):
 

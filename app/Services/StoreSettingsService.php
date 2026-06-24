@@ -109,6 +109,19 @@ class StoreSettingsService
         return $this->refreshSettingsCache($setting->fresh());
     }
 
+    public function forceChangeStoreName(string $storeName): StoreSetting
+    {
+        $setting = StoreSetting::query()->first() ?? StoreSetting::query()->create();
+
+        $setting->update(['store_name' => trim($storeName)]);
+
+        Log::warning('Store name force-changed', [
+            'store_name' => $setting->store_name,
+        ]);
+
+        return $this->refreshSettingsCache($setting->fresh());
+    }
+
     public function refreshSettingsCache(?StoreSetting $setting = null): StoreSetting
     {
         StoreCache::forgetSettings();
