@@ -43,7 +43,13 @@
       "Bash(echo \"exit: $?\")",
       "Bash(./vendor/bin/pint --test app/Console/Commands/StoreSetupCommand.php app/Http/Middleware/RedirectIfSetupIncomplete.php routes/web.php tests/Feature/SetupTest.php tests/Feature/SetupRedirectTest.php bootstrap/app.php)",
       "Bash(git stash *)",
-      "Bash(./vendor/bin/pint --test routes/web.php bootstrap/app.php)"
+      "Bash(./vendor/bin/pint --test routes/web.php bootstrap/app.php)",
+      "Bash(php -v)",
+      "Bash(php --ini)",
+      "Read(//etc/**)",
+      "Bash(apt list *)",
+      "Bash(\"/mnt/c/Program Files/Docker/Docker/resources/bin/docker\" ps)",
+      "Bash(echo \"exit:$?\")"
     ],
     "additionalDirectories": [
       "/home/wyco/.npm/_npx"

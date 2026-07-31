@@ -17,12 +17,18 @@ ARG VITE_REVERB_APP_KEY=
 ARG VITE_REVERB_HOST=
 ARG VITE_REVERB_PORT=443
 ARG VITE_REVERB_SCHEME=https
+ARG VITE_PUSHER_APP_KEY=
+ARG VITE_PUSHER_APP_CLUSTER=mt1
+ARG VITE_PUSHER_SCHEME=https
 ARG VITE_APP_NAME=E-Commerce
 
 ENV VITE_REVERB_APP_KEY=$VITE_REVERB_APP_KEY \
     VITE_REVERB_HOST=$VITE_REVERB_HOST \
     VITE_REVERB_PORT=$VITE_REVERB_PORT \
     VITE_REVERB_SCHEME=$VITE_REVERB_SCHEME \
+    VITE_PUSHER_APP_KEY=$VITE_PUSHER_APP_KEY \
+    VITE_PUSHER_APP_CLUSTER=$VITE_PUSHER_APP_CLUSTER \
+    VITE_PUSHER_SCHEME=$VITE_PUSHER_SCHEME \
     VITE_APP_NAME=$VITE_APP_NAME
 
 RUN npm run build
@@ -55,12 +61,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzip-dev \
     libpng-dev \
     libonig-dev \
+    libpq-dev \
     && docker-php-ext-install -j$(nproc) \
         bcmath \
         mbstring \
         opcache \
         pcntl \
         pdo_mysql \
+        pdo_pgsql \
         zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
