@@ -6,6 +6,7 @@ use App\Enums\PaymentMethodType;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentMethod;
 use App\Services\SecureUploadService;
+use App\Support\StoreCache;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,6 +53,8 @@ class PaymentSettingsController extends Controller
 
         PaymentMethod::create($data);
 
+        StoreCache::forgetPaymentMethods();
+
         return redirect()->route('admin.settings.payments.index')->with('success', 'Payment method created.');
     }
 
@@ -77,6 +80,8 @@ class PaymentSettingsController extends Controller
 
         $paymentMethod->update($data);
 
+        StoreCache::forgetPaymentMethods();
+
         return redirect()->route('admin.settings.payments.index')->with('success', 'Payment method updated.');
     }
 
@@ -90,6 +95,8 @@ class PaymentSettingsController extends Controller
 
         $this->uploads->deleteIfExists($paymentMethod->qr_image_path);
         $paymentMethod->delete();
+
+        StoreCache::forgetPaymentMethods();
 
         return redirect()->route('admin.settings.payments.index')->with('success', 'Payment method deleted.');
     }

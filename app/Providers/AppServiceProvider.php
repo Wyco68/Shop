@@ -18,11 +18,11 @@ use App\Services\StoreSettingsService;
 use App\Services\SupportContactService;
 use Illuminate\Cache\RateLimiting\Limit;
 use App\Support\PasswordRules;
+use App\Support\SchemaCache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -111,10 +111,10 @@ class AppServiceProvider extends ServiceProvider
         }
 
         try {
-            if (Schema::hasTable('store_settings')) {
+            if (SchemaCache::hasTable('store_settings')) {
                 $storeSettings = app(StoreSettingsService::class);
                 config(['shop.name' => $storeSettings->displayName()]);
-                if (Schema::hasColumn('store_settings', 'currency_code')) {
+                if (SchemaCache::hasColumn('store_settings', 'currency_code')) {
                     $storeSettings->syncCurrencyToConfig();
                 }
             }
@@ -127,7 +127,7 @@ class AppServiceProvider extends ServiceProvider
             $supportContacts = collect();
 
             try {
-                if (Schema::hasTable('support_contacts')) {
+                if (SchemaCache::hasTable('support_contacts')) {
                     $supportContacts = app(SupportContactService::class)->enabled();
                 }
             } catch (\Throwable) {

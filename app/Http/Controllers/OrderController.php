@@ -8,7 +8,9 @@ use App\Models\PaymentMethod;
 use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
+use App\Support\StoreCache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class OrderController extends Controller
 {
@@ -33,7 +35,9 @@ class OrderController extends Controller
     {
         $cart = $this->cartService->getOrCreateCart($request->user());
         $summary = $this->cartService->getCartSummary($cart);
-        $paymentMethods = PaymentMethod::active()->get();
+        $paymentMethods = Cache::remember(StoreCache::ACTIVE_PAYMENT_METHODS, 3600, function () {
+            return PaymentMethod::active()->get();
+        });
 
         return view('orders.create', compact('summary', 'paymentMethods'));
     }

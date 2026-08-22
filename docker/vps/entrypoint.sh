@@ -43,7 +43,10 @@ serve)
     php artisan storage:link --force 2>/dev/null || true
     # Clear (not cache) compiled config/routes/views: some routes use closures,
     # which `route:cache` cannot serialize, and env vars can change between deploys.
-    php artisan optimize:clear --no-interaction
+    # --except=cache: optimize:clear also runs cache:clear by default, which would
+    # FLUSHDB the whole Redis app-cache (settings/categories/support-contacts/product
+    # listings) on every boot, forcing a fully cold cache right after every deploy.
+    php artisan optimize:clear --except=cache --no-interaction
     php artisan migrate --force --no-interaction
 
     if ! php artisan tinker --execute="echo \\App\\Models\\User::hasAdmin() ? 'yes' : 'no';" 2>/dev/null | grep -q yes; then

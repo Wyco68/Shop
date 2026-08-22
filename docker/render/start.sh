@@ -45,7 +45,9 @@ fi
 php artisan storage:link --force 2>/dev/null || true
 
 # Avoid stale cached config from a previous deploy (common 500 cause when APP_URL was unset)
-php artisan optimize:clear --no-interaction 2>/dev/null || true
+# --except=cache: optimize:clear also runs cache:clear by default, which would
+# FLUSHDB the whole Redis app-cache on every boot.
+php artisan optimize:clear --except=cache --no-interaction 2>/dev/null || true
 
 php artisan migrate --force --no-interaction
 

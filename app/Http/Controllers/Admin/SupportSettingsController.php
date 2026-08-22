@@ -26,7 +26,7 @@ class SupportSettingsController extends Controller
     {
         $this->authorize('viewAny', SupportContact::class);
 
-        $supportContacts = SupportContact::query()->orderBy('sort_order')->orderBy('id')->get();
+        $supportContacts = $this->contacts->allCached();
         $types = SupportContactType::cases();
         $editContact = request()->integer('edit')
             ? $supportContacts->firstWhere('id', request()->integer('edit'))

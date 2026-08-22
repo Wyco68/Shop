@@ -46,6 +46,19 @@ class Discount extends Model
             });
     }
 
+    /**
+     * In-memory equivalent of scopeActive(), for filtering an already-loaded
+     * collection instead of querying (e.g. CartService::bestDiscount()).
+     */
+    public function isActiveNow(): bool
+    {
+        $now = now();
+
+        return $this->is_active
+            && (! $this->starts_at || $this->starts_at->lte($now))
+            && (! $this->ends_at || $this->ends_at->gte($now));
+    }
+
     public function scopeForProduct(Builder $query, int $productId): Builder
     {
         return $query->where('product_id', $productId);

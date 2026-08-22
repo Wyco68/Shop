@@ -46,7 +46,9 @@ if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
 fi
 
 # ── 5. Migrations ─────────────────────────────────────────────────────────────
-php artisan optimize:clear --no-interaction 2>/dev/null || true
+# --except=cache: optimize:clear also runs cache:clear by default, which would
+# FLUSHDB the whole Redis app-cache on every boot.
+php artisan optimize:clear --except=cache --no-interaction 2>/dev/null || true
 php artisan migrate --force --no-interaction
 
 # ── 6. Storage symlink ────────────────────────────────────────────────────────

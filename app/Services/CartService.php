@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Discount;
 use App\Models\ProductVariant;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -147,7 +149,11 @@ class CartService
     {
         $this->removeUnavailableItems($cart);
 
-        $cart->load('items.variant.product.discounts', 'items.variant.inventory');
+        $cart->load(
+            'items.variant.product.discounts',
+            'items.variant.product.category.discounts',
+            'items.variant.inventory',
+        );
 
         $items = [];
         $subtotal = 0;
@@ -205,10 +211,11 @@ class CartService
     {
         $variant = ProductVariant::with(['product', 'inventory'])->find($variantId);
 
-        if (! $variant) {
-            return false;
-        }
+        return $variant !== null && $this->isVariantModelPurchasable($variant);
+    }
 
+    private function isVariantModelPurchasable(ProductVariant $variant): bool
+    {
         try {
             $this->assertVariantPurchasable($variant);
         } catch (\RuntimeException) {
@@ -218,12 +225,18 @@ class CartService
         return true;
     }
 
+    /**
+     * Uses the relation already loaded below instead of isVariantPurchasable()'s
+     * fresh per-ID query — this runs once per cart line on every cart view and
+     * checkout, so a query per item here is an N+1 on the same hot path as
+     * calculateDiscount()/bestDiscount() above.
+     */
     private function removeUnavailableItems(Cart $cart): void
     {
         $cart->loadMissing('items.variant.product');
 
         foreach ($cart->items as $cartItem) {
-            if (! $cartItem->variant || ! $this->isVariantPurchasable($cartItem->variant_id)) {
+            if (! $cartItem->variant || ! $this->isVariantModelPurchasable($cartItem->variant)) {
                 $cartItem->delete();
             }
         }
@@ -254,22 +267,15 @@ class CartService
         }
     }
 
+    /**
+     * Reads from the relations eager-loaded by getCartSummary() instead of
+     * querying — this runs once per cart line, so a fresh query here turns
+     * into an N+1 on every cart view and checkout.
+     */
     private function calculateDiscount($product, int $quantity, float $unitPrice): array
     {
-        $discount = $product->discounts()
-            ->active()
-            ->where('min_quantity', '<=', $quantity)
-            ->orderByDesc('value')
-            ->first();
-
-        if (!$discount) {
-            // Check category-level discounts
-            $discount = \App\Models\Discount::active()
-                ->forCategory($product->category_id)
-                ->where('min_quantity', '<=', $quantity)
-                ->orderByDesc('value')
-                ->first();
-        }
+        $discount = $this->bestDiscount($product->discounts, $quantity)
+            ?? ($product->category ? $this->bestDiscount($product->category->discounts, $quantity) : null);
 
         if (!$discount) {
             return ['amount' => 0, 'info' => null];
@@ -291,5 +297,17 @@ class CartService
                 'value' => $discount->value,
             ],
         ];
+    }
+
+    /**
+     * In-memory equivalent of Discount::active()->where('min_quantity', '<=', $quantity)->orderByDesc('value')->first(),
+     * applied to an already-loaded relation collection instead of issuing a query.
+     */
+    private function bestDiscount(Collection $discounts, int $quantity): ?Discount
+    {
+        return $discounts
+            ->filter(fn (Discount $discount) => $discount->min_quantity <= $quantity && $discount->isActiveNow())
+            ->sortByDesc('value')
+            ->first();
     }
 }

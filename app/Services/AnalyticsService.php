@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Support\StoreCache;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
@@ -26,10 +28,12 @@ class AnalyticsService
      */
     public function getMonthlyEarnings(int $year, int $month): float
     {
-        return (float) Order::whereIn('status', self::VALID_STATUSES)
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->sum('total');
+        return Cache::remember(StoreCache::ANALYTICS_MONTHLY_EARNINGS.":{$year}:{$month}", 60, function () use ($year, $month) {
+            return (float) Order::whereIn('status', self::VALID_STATUSES)
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->sum('total');
+        });
     }
 
     /**
@@ -38,18 +42,28 @@ class AnalyticsService
      */
     public function getYearlyEarningsByMonth(int $year): array
     {
-        $rows = Order::whereIn('status', self::VALID_STATUSES)
-            ->whereYear('created_at', $year)
-            ->selectRaw('MONTH(created_at) as month, SUM(total) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month');
+        return Cache::remember(StoreCache::ANALYTICS_YEARLY_EARNINGS.":{$year}", 60, function () use ($year) {
+            // MONTH() is MySQL-only; the app also runs on Postgres (production) and
+            // SQLite (tests), each with a different month-extraction function.
+            $month = match (DB::connection()->getDriverName()) {
+                'pgsql' => 'CAST(EXTRACT(MONTH FROM created_at) AS INTEGER)',
+                'sqlite' => "CAST(strftime('%m', created_at) AS INTEGER)",
+                default => 'MONTH(created_at)',
+            };
 
-        $result = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $result[$m] = (float) ($rows[$m] ?? 0);
-        }
+            $rows = Order::whereIn('status', self::VALID_STATUSES)
+                ->whereYear('created_at', $year)
+                ->selectRaw("{$month} as month, SUM(total) as total")
+                ->groupBy('month')
+                ->pluck('total', 'month');
 
-        return $result;
+            $result = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $result[$m] = (float) ($rows[$m] ?? 0);
+            }
+
+            return $result;
+        });
     }
 
     /**
@@ -58,13 +72,15 @@ class AnalyticsService
      */
     public function getUserSpending(): Collection
     {
-        return DB::table('orders')
-            ->join('users', 'orders.user_id', '=', 'users.id')
-            ->whereIn('orders.status', self::VALID_STATUSES)
-            ->selectRaw('users.id as user_id, users.name, users.email, SUM(orders.total) as total_spent')
-            ->groupBy('users.id', 'users.name', 'users.email')
-            ->orderByDesc('total_spent')
-            ->get();
+        return Cache::remember(StoreCache::ANALYTICS_USER_SPENDING, 60, function () {
+            return DB::table('orders')
+                ->join('users', 'orders.user_id', '=', 'users.id')
+                ->whereIn('orders.status', self::VALID_STATUSES)
+                ->selectRaw('users.id as user_id, users.name, users.email, SUM(orders.total) as total_spent')
+                ->groupBy('users.id', 'users.name', 'users.email')
+                ->orderByDesc('total_spent')
+                ->get();
+        });
     }
 
     /**
@@ -98,13 +114,15 @@ class AnalyticsService
      */
     public function getDashboardStats(): array
     {
-        $now = now();
+        return Cache::remember(StoreCache::ANALYTICS_DASHBOARD_STATS, 60, function () {
+            $now = now();
 
-        return [
-            'monthly_earnings'  => $this->getMonthlyEarnings($now->year, $now->month),
-            'total_orders'      => Order::count(),
-            'pending_orders'    => Order::where('status', Order::STATUS_PENDING_PAYMENT)->count(),
-            'total_users'       => \App\Models\User::where('role', 'user')->count(),
-        ];
+            return [
+                'monthly_earnings'  => $this->getMonthlyEarnings($now->year, $now->month),
+                'total_orders'      => Order::count(),
+                'pending_orders'    => Order::where('status', Order::STATUS_PENDING_PAYMENT)->count(),
+                'total_users'       => User::where('role', 'user')->count(),
+            ];
+        });
     }
 }
