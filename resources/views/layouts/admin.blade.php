@@ -46,7 +46,7 @@
                 x-init="tick(); setInterval(() => tick(), 1000)"
                 class="w-full bg-amber-400 text-amber-950 text-sm font-medium px-4 py-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center"
             >
-                <span>🧪 Demo mode — you're using shared test credentials.</span>
+                <span>Demo mode — you're using shared test credentials.</span>
                 <span>Every change is undone automatically when you log out or the session ends.</span>
                 <span>Time left: <span x-text="remaining" class="font-semibold tabular-nums"></span></span>
             </div>
