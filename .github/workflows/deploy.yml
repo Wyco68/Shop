@@ -1,0 +1,65 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          timeout: 30s
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            cd ~/server/apps/Shop
+
+            echo "== Fetching origin/main =="
+            git fetch origin
+            # Hard reset, not --ff-only: this checkout only ever exists to mirror
+            # origin/main for deploys, so it should never diverge or need manual
+            # intervention. Untracked ops-only files (.env.vps,
+            # docker-compose.vps.proxy.yml, .env.vps.bak.*) are unaffected by reset.
+            git reset --hard origin/main
+
+            echo "== Building app image =="
+            docker compose -f docker-compose.vps.yml --env-file .env.vps build app
+
+            echo "== Recreating containers =="
+            docker compose -f docker-compose.vps.yml -f docker-compose.vps.proxy.yml --env-file .env.vps up -d app worker scheduler redis
+
+            echo "== Waiting for shop-app-1 to report healthy =="
+            healthy=""
+            for i in $(seq 1 30); do
+              status=$(docker inspect --format='{{.State.Health.Status}}' shop-app-1 2>/dev/null || echo "starting")
+              if [ "$status" = "healthy" ]; then
+                healthy=1
+                echo "app is healthy"
+                break
+              fi
+              sleep 2
+            done
+            if [ -z "$healthy" ]; then
+              echo "app did not become healthy in time -- recent logs:"
+              docker logs --tail 100 shop-app-1
+              exit 1
+            fi
+
+            echo "== Smoke test through Caddy =="
+            if docker exec caddy wget -qO- --header='Host: carpart.wyco-dev.com' -T 15 http://shop-app-1:8080/up | grep -qi 'application up'; then
+              echo "site reachable through Caddy"
+            else
+              echo "site NOT reachable through Caddy after deploy"
+              exit 1
+            fi
