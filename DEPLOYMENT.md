@@ -417,11 +417,15 @@ survive that server dying.
 
 ## Phase 10 — Updating the app
 
+The image is built in CI and pushed to `ghcr.io/wyco68/shop` — this VPS is small, and compiling PHP
+extensions + npm assets on every deploy competes with the running app for CPU/RAM. A normal deploy
+only *pulls*:
+
 ```bash
 cd ~/server/apps/Shop
 git pull
-tmux new -s build   # same reasoning as Phase 6 — this can take a few minutes
-docker compose -f docker-compose.vps.yml --env-file .env.vps build app
+docker login ghcr.io -u <your-github-username>   # once; token needs read:packages
+docker compose -f docker-compose.vps.yml --env-file .env.vps pull app
 docker compose -f docker-compose.vps.yml -f docker-compose.vps.proxy.yml --env-file .env.vps up -d app worker scheduler redis
 ```
 
@@ -432,16 +436,24 @@ the site goes straight to a 502 until they're recreated again *with* the overrid
 `app worker scheduler redis`; leaving `mysql`/`reverb` off that list avoids recreating containers this
 override doesn't touch.
 
-Rebuilding `app` and re-running `up -d` recreates those containers — `worker`/`scheduler` pick up the
-new image automatically since they reference `app`'s image tag rather than building their own.
-Migrations run automatically on the new `app` container's boot. Expect a few seconds of downtime during
-the swap — this single-VPS setup doesn't do rolling/zero-downtime deploys.
+Pulling `app` and re-running `up -d` recreates those containers — `worker`/`scheduler` pick up the new
+image automatically since they reference `app`'s image tag rather than building their own. Migrations
+run automatically on the new `app` container's boot. Expect a few seconds of downtime during the swap
+— this single-VPS setup doesn't do rolling/zero-downtime deploys.
+
+If you ever need to build locally instead of pulling (e.g. testing a Dockerfile change before it's in
+CI), `docker-compose.vps.yml` still has a `build:` block on `app` — `docker compose ... build app` works
+same as before, it's just not part of the normal deploy path anymore.
 
 ### Automated deploys (GitHub Actions)
 
-`.github/workflows/deploy.yml` runs this same sequence automatically on every push to `main` (plus
-a health check and a smoke test through Caddy before calling the deploy done). It needs three repo
-secrets under **Settings → Secrets and variables → Actions**:
+`.github/workflows/deploy.yml` has two jobs on every push to `main`: `build` compiles the image on
+GitHub's runner and pushes it to `ghcr.io/wyco68/shop:latest` (tagged with the commit SHA too, for
+rollback); `deploy` SSHes in, pulls that image, recreates the containers, waits for the health check,
+then smoke-tests through Caddy before calling it done. Needs, under
+**Settings → Secrets and variables → Actions**:
+
+**Secrets:**
 
 | Secret | Value |
 |---|---|
@@ -449,8 +461,19 @@ secrets under **Settings → Secrets and variables → Actions**:
 | `DEPLOY_USER` | `deploy` |
 | `DEPLOY_SSH_KEY` | the private key that authenticates as `deploy` on the VPS (full contents, including the `BEGIN`/`END` lines) |
 
-Without these secrets set, the workflow will fail at the SSH step — manual deploys via the commands
-above still work regardless.
+**Variables** (not secrets — these are compiled into the client-side JS bundle, so they're public by
+nature regardless of where they're stored; match whatever's in `.env.vps`):
+
+`VITE_REVERB_APP_KEY`, `VITE_REVERB_HOST`, `VITE_REVERB_PORT`, `VITE_REVERB_SCHEME`,
+`VITE_PUSHER_APP_KEY`, `VITE_PUSHER_APP_CLUSTER`, `VITE_PUSHER_SCHEME`, `VITE_APP_NAME`
+
+The `build` job authenticates to GHCR with the workflow's own `GITHUB_TOKEN` — no extra secret needed
+there. The `deploy` job forwards that same token to the VPS over SSH just long enough to `docker login`
+and pull; nothing long-lived is stored on the VPS for this.
+
+Without the three SSH secrets set, the workflow fails at the SSH step. Without the VITE_* variables
+set, the image still builds — those args just default to whatever's declared in
+`docker/vps/Dockerfile`, which may not match the real Reverb/Pusher config.
 
 ---
 

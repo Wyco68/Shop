@@ -2,10 +2,16 @@
 # TLS termination is handled by Nginx running on the host (not in this stack) — see
 # DEPLOYMENT.md "Phase 6". The "app" and "reverb" containers each publish a port on localhost
 # only, for Nginx to reverse_proxy/upgrade into.
+#
+# The app image is built in CI (.github/workflows/deploy.yml) and pushed to
+# ghcr.io/wyco68/shop — this is a budget VPS, and compiling PHP extensions + npm assets on every
+# deploy competed with the app itself for CPU/RAM. `image:` below is what the deploy pulls;
+# `build:` is kept on "app" only as a manual/local-dev fallback (`docker compose build app`),
+# never run as part of a normal deploy.
 # Usage:
 #   cp .env.vps.example .env.vps
 #   # edit .env.vps: set APP_URL, DB_PASSWORD, generate APP_KEY (see README "VPS Deployment")
-#   docker compose -f docker-compose.vps.yml --env-file .env.vps build app   # build once
+#   docker compose -f docker-compose.vps.yml --env-file .env.vps pull app   # normal deploy
 #   docker compose -f docker-compose.vps.yml --env-file .env.vps up -d      # worker/scheduler reuse it
 #
 # Only "app" has a `build:` block — worker/scheduler just reference its image tag. Giving all three
@@ -19,11 +25,14 @@ x-app-build: &app-build
     VITE_REVERB_HOST: ${VITE_REVERB_HOST:-}
     VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
     VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
+    VITE_PUSHER_APP_KEY: ${VITE_PUSHER_APP_KEY:-}
+    VITE_PUSHER_APP_CLUSTER: ${VITE_PUSHER_APP_CLUSTER:-mt1}
+    VITE_PUSHER_SCHEME: ${VITE_PUSHER_SCHEME:-https}
     VITE_APP_NAME: ${VITE_APP_NAME:-E-Commerce}
 
 services:
   app:
-    image: carpart-app:latest
+    image: ghcr.io/wyco68/shop:latest
     build: *app-build
     command: ["serve"]
     env_file: .env.vps
@@ -45,7 +54,7 @@ services:
     restart: unless-stopped
 
   worker:
-    image: carpart-app:latest
+    image: ghcr.io/wyco68/shop:latest
     command: ["worker"]
     env_file: .env.vps
     volumes:
@@ -56,7 +65,7 @@ services:
     restart: unless-stopped
 
   scheduler:
-    image: carpart-app:latest
+    image: ghcr.io/wyco68/shop:latest
     command: ["scheduler"]
     env_file: .env.vps
     volumes:
@@ -67,7 +76,7 @@ services:
     restart: unless-stopped
 
   reverb:
-    image: carpart-app:latest
+    image: ghcr.io/wyco68/shop:latest
     command: ["reverb"]
     env_file: .env.vps
     ports:
