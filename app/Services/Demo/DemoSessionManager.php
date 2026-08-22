@@ -41,14 +41,20 @@ class DemoSessionManager
         return max(1, (int) config('admin.demo.session_minutes', 30));
     }
 
+    /**
+     * demo:sweep-sessions can revert+end a row in the background (by expires_at)
+     * without ever touching the browser's actual session — so a still-live
+     * session_id can already have a closed-out row here. session_id is unique,
+     * so we must reuse that row (its expires_at is necessarily already past,
+     * which the caller's isExpired() check picks up and reverts safely again
+     * as a no-op) rather than attempt a second insert with the same id.
+     */
     public function startOrResume(Request $request, User $user): DemoAdminSession
     {
         $sessionId = $request->session()->getId();
 
         $session = DemoAdminSession::query()
             ->where('session_id', $sessionId)
-            ->whereNull('ended_at')
-            ->whereNull('reverted_at')
             ->first();
 
         if (! $session) {
