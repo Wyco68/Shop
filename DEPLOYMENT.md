@@ -447,13 +447,14 @@ same as before, it's just not part of the normal deploy path anymore.
 
 ### Automated deploys (GitHub Actions)
 
-`.github/workflows/deploy.yml` has two jobs on every push to `main`: `build` compiles the image on
-GitHub's runner and pushes it to `ghcr.io/wyco68/shop:latest` (tagged with the commit SHA too, for
-rollback); `deploy` SSHes in, pulls that image, recreates the containers, waits for the health check,
-then smoke-tests through Caddy before calling it done. Needs, under
-**Settings → Secrets and variables → Actions**:
+`.github/workflows/deploy.yml` has two jobs on every push to `main`: `build` fetches the `VITE_*`
+build args from `.env.vps` over SSH, compiles the image on GitHub's runner, and pushes it to
+`ghcr.io/wyco68/shop:latest` (tagged with the commit SHA too, for rollback); `deploy` SSHes in, pulls
+that image, recreates the containers, waits for the health check, then smoke-tests through Caddy
+before calling it done. `.env.vps` on the VPS stays the single source of truth for the `VITE_*`
+values — nothing about them is duplicated into GitHub, so they can't drift out of sync.
 
-**Secrets:**
+Needs three repo secrets under **Settings → Secrets and variables → Actions**:
 
 | Secret | Value |
 |---|---|
@@ -461,19 +462,11 @@ then smoke-tests through Caddy before calling it done. Needs, under
 | `DEPLOY_USER` | `deploy` |
 | `DEPLOY_SSH_KEY` | the private key that authenticates as `deploy` on the VPS (full contents, including the `BEGIN`/`END` lines) |
 
-**Variables** (not secrets — these are compiled into the client-side JS bundle, so they're public by
-nature regardless of where they're stored; match whatever's in `.env.vps`):
-
-`VITE_REVERB_APP_KEY`, `VITE_REVERB_HOST`, `VITE_REVERB_PORT`, `VITE_REVERB_SCHEME`,
-`VITE_PUSHER_APP_KEY`, `VITE_PUSHER_APP_CLUSTER`, `VITE_PUSHER_SCHEME`, `VITE_APP_NAME`
-
 The `build` job authenticates to GHCR with the workflow's own `GITHUB_TOKEN` — no extra secret needed
 there. The `deploy` job forwards that same token to the VPS over SSH just long enough to `docker login`
 and pull; nothing long-lived is stored on the VPS for this.
 
-Without the three SSH secrets set, the workflow fails at the SSH step. Without the VITE_* variables
-set, the image still builds — those args just default to whatever's declared in
-`docker/vps/Dockerfile`, which may not match the real Reverb/Pusher config.
+Without these secrets set, the workflow fails at the SSH step.
 
 ---
 
