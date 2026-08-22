@@ -418,17 +418,39 @@ survive that server dying.
 ## Phase 10 — Updating the app
 
 ```bash
-cd ~/carPart
+cd ~/server/apps/Shop
 git pull
 tmux new -s build   # same reasoning as Phase 6 — this can take a few minutes
 docker compose -f docker-compose.vps.yml --env-file .env.vps build app
-docker compose -f docker-compose.vps.yml --env-file .env.vps up -d
+docker compose -f docker-compose.vps.yml -f docker-compose.vps.proxy.yml --env-file .env.vps up -d app worker scheduler redis
 ```
 
-Rebuilding `app` and re-running `up -d` recreates all four containers — `worker`/`scheduler`/`reverb`
-pick up the new image automatically since they reference `app`'s image tag rather than building their own.
+**`-f docker-compose.vps.proxy.yml` is required**, not optional. It's an ops-only override (not in
+git) that joins `app`/`worker`/`scheduler` to the Caddy stack's network (`server_default`) instead of
+publishing a host port. Recreating those containers without it drops Caddy's route to `shop-app-1` —
+the site goes straight to a 502 until they're recreated again *with* the override. Restrict `up -d` to
+`app worker scheduler redis`; leaving `mysql`/`reverb` off that list avoids recreating containers this
+override doesn't touch.
+
+Rebuilding `app` and re-running `up -d` recreates those containers — `worker`/`scheduler` pick up the
+new image automatically since they reference `app`'s image tag rather than building their own.
 Migrations run automatically on the new `app` container's boot. Expect a few seconds of downtime during
 the swap — this single-VPS setup doesn't do rolling/zero-downtime deploys.
+
+### Automated deploys (GitHub Actions)
+
+`.github/workflows/deploy.yml` runs this same sequence automatically on every push to `main` (plus
+a health check and a smoke test through Caddy before calling the deploy done). It needs three repo
+secrets under **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+|---|---|
+| `DEPLOY_HOST` | the VPS IP |
+| `DEPLOY_USER` | `deploy` |
+| `DEPLOY_SSH_KEY` | the private key that authenticates as `deploy` on the VPS (full contents, including the `BEGIN`/`END` lines) |
+
+Without these secrets set, the workflow will fail at the SSH step — manual deploys via the commands
+above still work regardless.
 
 ---
 
