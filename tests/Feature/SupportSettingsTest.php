@@ -9,10 +9,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class SupportSettingsTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
 
     public function test_admin_can_create_support_contact_with_qr(): void
@@ -81,6 +83,8 @@ class SupportSettingsTest extends TestCase
 
     public function test_contact_page_shows_enabled_contacts(): void
     {
+        $this->bootstrapStore();
+
         SupportContact::create([
             'type' => SupportContactType::Line,
             'username' => 'line-id',

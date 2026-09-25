@@ -18,10 +18,12 @@ use App\Services\CartService;
 use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class RefundTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
 
     private function createDeliveredOrder(User $user): Order
@@ -46,6 +48,8 @@ class RefundTest extends TestCase
 
     public function test_user_can_request_refund_on_completed_order(): void
     {
+        $this->bootstrapStore();
+
         $user  = User::factory()->create();
         $order = $this->createDeliveredOrder($user);
 
@@ -64,6 +68,8 @@ class RefundTest extends TestCase
 
     public function test_user_cannot_request_refund_on_pending_order(): void
     {
+        $this->bootstrapStore();
+
         $user     = User::factory()->create();
         $category = Category::factory()->create();
         $product  = Product::factory()->create(['category_id' => $category->id, 'base_price' => 50.00]);
@@ -85,6 +91,8 @@ class RefundTest extends TestCase
 
     public function test_duplicate_refund_request_is_rejected(): void
     {
+        $this->bootstrapStore();
+
         $user  = User::factory()->create();
         $order = $this->createDeliveredOrder($user);
 
@@ -107,7 +115,7 @@ class RefundTest extends TestCase
 
     public function test_admin_can_approve_refund_request(): void
     {
-        $admin  = User::factory()->create(['role' => 'admin']);
+        $admin  = User::factory()->admin()->create();
         $user   = User::factory()->create(['role' => 'user']);
         $order  = $this->createDeliveredOrder($user);
 
@@ -134,7 +142,7 @@ class RefundTest extends TestCase
 
     public function test_admin_can_reject_refund_request(): void
     {
-        $admin  = User::factory()->create(['role' => 'admin']);
+        $admin  = User::factory()->admin()->create();
         $user   = User::factory()->create(['role' => 'user']);
         $order  = $this->createDeliveredOrder($user);
 
@@ -160,6 +168,8 @@ class RefundTest extends TestCase
 
     public function test_refund_request_dispatches_event(): void
     {
+        $this->bootstrapStore();
+
         Event::fake([RefundRequested::class]);
 
         $user  = User::factory()->create();

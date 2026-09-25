@@ -12,10 +12,12 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class AdminFeatureTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
 
     private function createProductWithStock(array $overrides = [], int $stock = 50): array
@@ -47,6 +49,8 @@ class AdminFeatureTest extends TestCase
 
     public function test_user_cannot_access_admin_dashboard()
     {
+        $this->bootstrapStore();
+
         $user = User::factory()->create();
         $this->actingAs($user)->get('/admin')->assertForbidden();
     }

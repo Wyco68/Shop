@@ -48,7 +48,7 @@ class NotificationTest extends TestCase
 
     public function test_admin_receives_notification_on_order_placed(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->admin()->create();
         $user  = User::factory()->create(['role' => 'user']);
 
         $order = $this->createOrderForUser($user);
@@ -78,7 +78,7 @@ class NotificationTest extends TestCase
 
     public function test_admin_receives_notification_on_refund_requested(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->admin()->create();
         $user  = User::factory()->create(['role' => 'user']);
         $order = $this->createOrderForUser($user);
 

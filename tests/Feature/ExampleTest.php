@@ -3,11 +3,21 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bootstrapStore();
+    }
+
     /**
      * A basic test example.
      */

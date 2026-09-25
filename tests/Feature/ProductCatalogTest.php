@@ -9,11 +9,20 @@ use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use App\Support\StoreCache;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class ProductCatalogTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bootstrapStore();
+    }
 
     public function test_products_index_loads_with_active_products(): void
     {

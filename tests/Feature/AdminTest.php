@@ -11,10 +11,12 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class AdminTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
 
     public function test_admin_can_access_dashboard(): void
@@ -28,6 +30,8 @@ class AdminTest extends TestCase
 
     public function test_regular_user_cannot_access_admin(): void
     {
+        $this->bootstrapStore();
+
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->get('/admin');
@@ -126,6 +130,8 @@ class AdminTest extends TestCase
 
     public function test_regular_user_cannot_create_product(): void
     {
+        $this->bootstrapStore();
+
         $user = User::factory()->create();
         $category = Category::factory()->create();
 
