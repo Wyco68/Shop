@@ -82,11 +82,15 @@ class OrderTest extends TestCase
     public function test_order_creation_fails_with_insufficient_stock(): void
     {
         $user = User::factory()->create();
-        $data = $this->createProductWithStock([], 2);
+        $data = $this->createProductWithStock([], 5);
 
         $cartService = app(CartService::class);
         $cart = $cartService->getOrCreateCart($user);
         $cartService->addItem($cart, $data['variant']->id, 5);
+
+        // addItem() caps the line at available stock, so the shortfall has to
+        // appear between add-to-cart and checkout (e.g. another customer's order).
+        $data['inventory']->update(['stock_quantity' => 2]);
 
         $this->expectException(\RuntimeException::class);
 

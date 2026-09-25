@@ -9,11 +9,20 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
+use Tests\Concerns\BootstrapsStore;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
 {
+    use BootstrapsStore;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bootstrapStore();
+    }
 
     public function test_email_verification_screen_can_be_rendered(): void
     {

@@ -13,6 +13,16 @@ class DemoAdminSessionTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * The test client doesn't carry cookies between requests, so each one would
+     * otherwise start a fresh session ID. A browser keeps the session cookie,
+     * which is what ties logout/expiry back to the demo session row.
+     */
+    private function continueSession(): static
+    {
+        return $this->withCookie(config('session.cookie'), session()->getId());
+    }
+
     public function test_category_created_by_demo_admin_is_removed_on_logout(): void
     {
         $admin = User::factory()->admin()->create();
@@ -23,7 +33,7 @@ class DemoAdminSessionTest extends TestCase
 
         $this->assertDatabaseHas('categories', ['name' => 'Brakes']);
 
-        $this->post(route('logout'));
+        $this->continueSession()->post(route('logout'));
 
         $this->assertDatabaseMissing('categories', ['name' => 'Brakes']);
     }
@@ -39,7 +49,7 @@ class DemoAdminSessionTest extends TestCase
 
         $this->assertDatabaseHas('categories', ['id' => $category->id, 'name' => 'Changed Name']);
 
-        $this->post(route('logout'));
+        $this->continueSession()->post(route('logout'));
 
         $this->assertDatabaseHas('categories', ['id' => $category->id, 'name' => 'Original Name']);
     }
@@ -55,7 +65,7 @@ class DemoAdminSessionTest extends TestCase
 
         $this->assertDatabaseMissing('categories', ['id' => $category->id]);
 
-        $this->post(route('logout'));
+        $this->continueSession()->post(route('logout'));
 
         $this->assertDatabaseHas('categories', ['id' => $category->id, 'name' => 'To Be Deleted']);
     }
@@ -91,7 +101,7 @@ class DemoAdminSessionTest extends TestCase
         $session = DemoAdminSession::sole();
         $session->forceFill(['expires_at' => now()->subMinute()])->save();
 
-        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
+        $response = $this->continueSession()->actingAs($admin)->get(route('admin.dashboard'));
 
         $response->assertRedirect(route('login'));
         $this->assertGuest();

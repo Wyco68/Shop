@@ -27,6 +27,7 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="ADMIN_PASSWORD_CHECK_BREACHED" value="false"/>
+        <env name="ADMIN_PASSWORD_WEB_CHANGE_ENABLED" value="true"/>
         <env name="ADMIN_PASSWORD_CHANGE_COOLDOWN_MINUTES" value="0"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
