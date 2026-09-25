@@ -15,11 +15,14 @@ return new class extends Migration
             $table->index(['role', 'created_at'], 'users_role_created_at_idx');
         });
 
-        // inventories.variant_id already has a unique index from the column's
-        // ->unique() constraint (create_inventories_table); this non-unique
-        // index added later duplicates it, doubling write-time index maintenance
-        // for no lookup benefit.
+        // create_inventories_table chains ->unique() after ->constrained(), which
+        // lands on the foreign key definition rather than the column, so no
+        // unique index is ever created. inventories_variant_id_idx is then the
+        // only index backing the foreign key and MySQL refuses to drop it
+        // (error 1553). Add the intended one-row-per-variant unique index first;
+        // it serves the foreign key and makes the non-unique index redundant.
         Schema::table('inventories', function (Blueprint $table) {
+            $table->unique('variant_id', 'inventories_variant_id_unique');
             $table->dropIndex('inventories_variant_id_idx');
         });
     }
@@ -32,6 +35,7 @@ return new class extends Migration
 
         Schema::table('inventories', function (Blueprint $table) {
             $table->index('variant_id', 'inventories_variant_id_idx');
+            $table->dropUnique('inventories_variant_id_unique');
         });
     }
 };
