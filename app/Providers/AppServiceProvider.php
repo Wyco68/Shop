@@ -17,6 +17,8 @@ use App\Listeners\NotifyUserRefundRejected;
 use App\Services\StoreSettingsService;
 use App\Services\SupportContactService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\Events\DiagnosingHealth;
+use Illuminate\Support\Facades\DB;
 use App\Support\PasswordRules;
 use App\Support\SchemaCache;
 use Illuminate\Support\Facades\View;
@@ -85,6 +87,13 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->ip());
+        });
+
+        // /up is what the compose healthcheck and the CI deploy smoke test watch, so it must fail
+        // when PHP can't reach the database, not just when PHP is down. Laravel turns an exception
+        // here into a 500 "experiencing problems" page and only logs the message.
+        Event::listen(DiagnosingHealth::class, function (): void {
+            DB::connection()->select('select 1');
         });
 
         if ($this->app->environment('production')) {
