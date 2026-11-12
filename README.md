@@ -9,7 +9,7 @@
 
 ## Tech Stack
 
-- Laravel 12, PHP 8.4, MySQL 8
+- Laravel 12, PHP 8.5, MySQL 8
 - Redis (sessions, cache, queues)
 - Blade, Tailwind CSS v4, Alpine.js
 - Laravel Reverb (self-hosted WebSockets) + Laravel Echo
@@ -56,7 +56,7 @@ cp .env.example .env
 ./vendor/bin/sail up -d
 ```
 
-Starts app (PHP 8.4), MySQL 8, and Redis in the background. First run pulls images (~1–2 min).
+Starts app (PHP 8.5), MySQL 8, and Redis in the background. First run pulls images (~1–2 min).
 
 ### 5. Generate app key
 

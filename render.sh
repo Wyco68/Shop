@@ -21,7 +21,7 @@ if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
 fi
 
 echo "==> Generating a production APP_KEY (paste this into Render's APP_KEY variable)..."
-GENERATED_KEY="base64:$(docker run --rm php:8.4-cli-bookworm php -r 'echo base64_encode(random_bytes(32));')"
+GENERATED_KEY="base64:$(docker run --rm php:8.5-cli-trixie php -r 'echo base64_encode(random_bytes(32));')"
 echo ""
 echo "  APP_KEY=${GENERATED_KEY}"
 echo ""
