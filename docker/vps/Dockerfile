@@ -52,7 +52,7 @@ RUN composer install \
     --no-interaction \
     --optimize-autoloader
 
-FROM php:8.4-cli-bookworm
+FROM php:8.5-cli-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
@@ -65,7 +65,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install -j$(nproc) \
         bcmath \
         mbstring \
-        opcache \
         pcntl \
         pdo_mysql \
         pdo_pgsql \
@@ -76,6 +75,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY docker/vps/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY docker/vps/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
+COPY docker/vps/security.ini /usr/local/etc/php/conf.d/zz-security.ini
 
 COPY --from=vendor /app /var/www/html
 COPY --from=frontend /app/public/build /var/www/html/public/build

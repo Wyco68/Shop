@@ -38,7 +38,7 @@ fi
 
 if ! grep -q '^APP_KEY=base64:' .env.railway 2>/dev/null; then
     echo "==> Generating APP_KEY..."
-    GENERATED_KEY="base64:$(docker run --rm php:8.4-cli-bookworm php -r 'echo base64_encode(random_bytes(32));')"
+    GENERATED_KEY="base64:$(docker run --rm php:8.5-cli-trixie php -r 'echo base64_encode(random_bytes(32));')"
     if grep -q '^APP_KEY=' .env.railway; then
         sed -i.bak "s|^APP_KEY=.*|APP_KEY=${GENERATED_KEY}|" .env.railway && rm -f .env.railway.bak
     else

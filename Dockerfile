@@ -43,7 +43,7 @@ RUN composer install \
     --no-interaction \
     --optimize-autoloader
 
-FROM php:8.4-cli-bookworm
+FROM php:8.5-cli-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
@@ -54,7 +54,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install -j$(nproc) \
         bcmath \
         mbstring \
-        opcache \
         pdo_mysql \
         zip \
     && pecl install redis \

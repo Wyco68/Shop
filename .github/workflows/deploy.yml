@@ -50,7 +50,7 @@ jobs:
       # gd: UploadedFile::fake()->image() in the branding/support tests.
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: bcmath, gd, intl, mbstring, pcntl, pdo_mysql, zip
           coverage: none
 
