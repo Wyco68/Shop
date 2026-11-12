@@ -1,0 +1,32 @@
+# FrankenPHP config for the VPS image (the "serve" role in docker/vps/entrypoint.sh).
+# TLS is terminated by the host-level Caddy (~/server on the VPS), which proxies to this
+# container over the shared Docker network, so this server only speaks plain HTTP.
+# Laravel reads X-Forwarded-* itself (trustProxies in bootstrap/app.php).
+{
+	auto_https off
+	admin off
+	frankenphp
+}
+
+:{$PORT:8080} {
+	root * /var/www/html/public
+
+	# Dotfiles are never served (/.well-known stays reachable).
+	@hidden {
+		path */.*
+		not path /.well-known/*
+	}
+
+	# Only the front controller runs as PHP. public/server.php is the `php -S` router used
+	# by the Render image and must not be reachable here.
+	@otherPhp {
+		path *.php
+		not path /index.php
+	}
+
+	route {
+		respond @hidden 404
+		respond @otherPhp 404
+		php_server
+	}
+}

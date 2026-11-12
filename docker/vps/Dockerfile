@@ -52,7 +52,9 @@ RUN composer install \
     --no-interaction \
     --optimize-autoloader
 
-FROM php:8.5-cli-trixie
+# FrankenPHP (Caddy + PHP 8.5 ZTS) serves HTTP in production instead of `php -S`, which is a
+# development server. The same image still runs the worker/scheduler/reverb roles via `php`.
+FROM dunglas/frankenphp:1-php8.5-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
@@ -76,6 +78,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY docker/vps/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY docker/vps/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 COPY docker/vps/security.ini /usr/local/etc/php/conf.d/zz-security.ini
+COPY docker/vps/Caddyfile /etc/frankenphp/Caddyfile
 
 COPY --from=vendor /app /var/www/html
 COPY --from=frontend /app/public/build /var/www/html/public/build
@@ -83,7 +86,7 @@ COPY --from=frontend /app/public/build /var/www/html/public/build
 WORKDIR /var/www/html
 
 RUN mkdir -p database storage/framework/{cache/data,sessions,views} storage/logs storage/app/public storage/app/private bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache database
+    && chown -R www-data:www-data storage bootstrap/cache database /config/caddy /data/caddy
 
 COPY docker/vps/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
