@@ -8,6 +8,14 @@ set -euo pipefail
 cd /var/www/html
 ROLE="${1:-serve}"
 
+# Setup below (chown, migrations) runs as root; the long-running PHP process for every role
+# runs as www-data so a compromised request or job can't write outside storage/ and bootstrap/cache.
+# HOME must follow the user: setpriv leaves it at /root, and libpq then fails every SSL connection
+# (Supabase uses sslmode=require) on "could not open /root/.postgresql/postgresql.crt: Permission denied".
+as_app() {
+    exec setpriv --reuid=www-data --regid=www-data --init-groups env HOME=/var/www "$@"
+}
+
 wait_for() {
     local host="$1" port="$2" name="$3"
     echo "[entrypoint] Waiting for ${name} at ${host}:${port}..."
@@ -58,17 +66,17 @@ serve)
         exit 1
     fi
 
-    cd public
-    exec php -S "0.0.0.0:${PORT:-8080}" server.php
+    # Listens on $PORT (docker/vps/Caddyfile).
+    as_app frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile
     ;;
 worker)
-    exec php artisan queue:work redis --sleep=1 --tries=3 --timeout=120
+    as_app php artisan queue:work redis --sleep=1 --tries=3 --timeout=120
     ;;
 scheduler)
-    exec php artisan schedule:work
+    as_app php artisan schedule:work
     ;;
 reverb)
-    exec php artisan reverb:start
+    as_app php artisan reverb:start
     ;;
 *)
     exec "$@"
